@@ -1,6 +1,7 @@
 module Day03
 
 using AdventOfCode2024
+using IterTools
 
 
 function day03(input::String = readInput(joinpath(@__DIR__, "..", "data", "day03.txt")))
@@ -15,12 +16,13 @@ function day03(input::String = readInput(joinpath(@__DIR__, "..", "data", "day03
     creg = r"do(?:n't)?\(\)"
     coccurences = findall(creg, input)
     enabled = ones(Bool, length(input))
-    for cocc ∈ coccurences
-        if length(cocc) == 4
-            enabled[cocc[2]:end] .= true
-        else
-            enabled[cocc[2]:end] .= false
+    for (a, b) ∈ partition(coccurences, 2, 1)
+        if length(a) != 4
+            enabled[a[2]:b[1]] .= false
         end
+    end
+    if length(coccurences[end]) != 4
+        enabled[coccurences[end][2]:end] .= false
     end
     p2 = 0
     for occ ∈ occurences

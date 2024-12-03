@@ -22,3 +22,7 @@ end
     @test AdventOfCode2024.Day02.day02(sample) == [2, 4]
     @test AdventOfCode2024.Day02.day02() == [411, 465]
 end
+
+@testset "Day 3" begin
+    sample = "xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))"
+end

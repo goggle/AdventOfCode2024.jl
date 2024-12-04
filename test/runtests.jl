@@ -26,3 +26,18 @@ end
 @testset "Day 3" begin
     @test AdventOfCode2024.Day03.day03() == [168539636, 97529391]
 end
+
+@testset "Day 4" begin
+    sample = "MMMSXXMASM\n" *
+             "MSAMXMSMSA\n" *
+             "AMXSXMAAMM\n" *
+             "MSAMASMSMX\n" *
+             "XMASAMXAMM\n" *
+             "XXAMMXXAMA\n" *
+             "SMSMSASXSS\n" *
+             "SAXAMASAAA\n" *
+             "MAMMMXMMMM\n" *
+             "MXMXAXMASX\n"
+    @testset AdventOfCode2024.Day04.day04(sample) == [18, 9]
+    @testset AdventOfCode2024.Day04.day04() == [2344, 1815]
+end

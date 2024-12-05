@@ -38,8 +38,8 @@ end
              "SAXAMASAAA\n" *
              "MAMMMXMMMM\n" *
              "MXMXAXMASX\n"
-    @testset AdventOfCode2024.Day04.day04(sample) == [18, 9]
-    @testset AdventOfCode2024.Day04.day04() == [2344, 1815]
+    @test AdventOfCode2024.Day04.day04(sample) == [18, 9]
+    @test AdventOfCode2024.Day04.day04() == [2344, 1815]
 end
 
 @testset "Day 5" begin
@@ -71,4 +71,6 @@ end
              "75,97,47,61,53\n" *
              "61,13,29\n" *
              "97,13,75,29,47\n"
+    @test AdventOfCode2024.Day05.day05(sample) == [143, 123]
+    @test AdventOfCode2024.Day05.day05() == [6041, 4884]
 end

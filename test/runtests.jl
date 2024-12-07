@@ -89,3 +89,17 @@ end
     @test AdventOfCode2024.Day06.day06(sample) == [41, 6]
     @test AdventOfCode2024.Day06.day06() == [4602, 1703]
 end
+
+@testset "Day 7" begin
+    sample = "190: 10 19\n" *
+             "3267: 81 40 27\n" *
+             "83: 17 5\n" *
+             "156: 15 6\n" *
+             "7290: 6 8 6 15\n" *
+             "161011: 16 10 13\n" *
+             "192: 17 8 14\n" *
+             "21037: 9 7 18 13\n" *
+             "292: 11 6 16 20\n"
+    @test AdventOfCode2024.Day07.day07(sample) == [3749, 11387]
+    @test AdventOfCode2024.Day07.day07() == [2437272016585, 162987117690649]
+end

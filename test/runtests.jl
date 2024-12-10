@@ -123,6 +123,8 @@ end
 
 @testset "Day 9" begin
     sample = "2333133121414131402"
+    @test AdventOfCode2024.Day09.day09(sample) == [1928, 2858]
+    @test AdventOfCode2024.Day09.day09() == [6242766523059, 6272188244509]
 end
 
 @testset "Day 10" begin

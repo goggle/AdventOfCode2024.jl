@@ -3,7 +3,7 @@ module AdventOfCode2024
 using BenchmarkTools
 using Printf
 
-solvedDays = 1:8
+solvedDays = 1:10
 # Include the source files:
 for day in solvedDays
     ds = @sprintf("%02d", day)

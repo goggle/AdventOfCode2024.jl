@@ -138,5 +138,11 @@ end
              "10456732\n"
     @test AdventOfCode2024.Day10.day10(sample) == [36, 81]
     @test AdventOfCode2024.Day10.day10() == [617, 1477]
-    
+end
+
+@testset "Day 11" begin
+    sample = "125 17"
+    @test AdventOfCode2024.Day11.day11(sample) == [55312, 65601038650482]
+    @test AdventOfCode2024.Day11.day11() == [198089, 236302670835517]
+
 end

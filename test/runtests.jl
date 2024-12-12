@@ -144,5 +144,19 @@ end
     sample = "125 17"
     @test AdventOfCode2024.Day11.day11(sample) == [55312, 65601038650482]
     @test AdventOfCode2024.Day11.day11() == [198089, 236302670835517]
+end
 
+@testset "Day 12" begin
+    sample = "RRRRIICCFF\n" *
+             "RRRRIICCCF\n" *
+             "VVRRRCCFFF\n" *
+             "VVRCCCJFFF\n" *
+             "VVVVCJJCFE\n" *
+             "VVIVCCJJEE\n" *
+             "VVIIICJJEE\n" *
+             "MIIIIIJJEE\n" *
+             "MIIISIJEEE\n" *
+             "MMMISSJEEE\n"
+    @test AdventOfCode2024.Day12.day12(sample) == [1930, 1206]
+    @test AdventOfCode2024.Day12.day12() == [1304764, 811148]
 end

@@ -160,3 +160,23 @@ end
     @test AdventOfCode2024.Day12.day12(sample) == [1930, 1206]
     @test AdventOfCode2024.Day12.day12() == [1304764, 811148]
 end
+
+@testset "Day 13" begin
+    sample = "Button A: X+94, Y+34\n" *
+             "Button B: X+22, Y+67\n" *
+             "Prize: X=8400, Y=5400\n" *
+             "\n" *
+             "Button A: X+26, Y+66\n" *
+             "Button B: X+67, Y+21\n" *
+             "Prize: X=12748, Y=12176\n" *
+             "\n" *
+             "Button A: X+17, Y+86\n" *
+             "Button B: X+84, Y+37\n" *
+             "Prize: X=7870, Y=6450\n" *
+             "\n" *
+             "Button A: X+69, Y+23\n" *
+             "Button B: X+27, Y+71\n" *
+             "Prize: X=18641, Y=10279\n"
+    @test AdventOfCode2024.Day13.day13(sample) == [480, 875318608908]
+    @test AdventOfCode2024.Day13.day13() == [28138, 108394825772874]
+end

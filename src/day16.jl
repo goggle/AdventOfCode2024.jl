@@ -6,13 +6,17 @@ using DataStructures
 
 function day16(input::String = readInput(joinpath(@__DIR__, "..", "data", "day16.txt")))
     data = map(x -> x[1], reduce(vcat, permutedims.(map(x -> split(x, ""), split(input)))))
-    part1(data)
+    # part1(data)
+    # p1(data)
+    dist, prev = dijkstra(data)
+    endpos = findall(x -> x == 'E', data)[1]
+    p1 = minimum(dist[endpos.I..., i] for i ∈ 1:4)
 end
 
-function p1(data)
+function dijkstra(data)
     startpos = findall(x -> x == 'S', data)[1]
-    startdir = [0, 1]
-    endpos = findall(x -> x == 'E', data)[1]
+    # startdir = [0, 1]
+    # endpos = findall(x -> x == 'E', data)[1]
     dist = Dict{Tuple{Int,Int,Int},Int}()
     dist[startpos.I..., 2] = 0
     pq = PriorityQueue{Tuple{Int,Int,Int},Int}()
@@ -32,9 +36,18 @@ function p1(data)
     while !isempty(pq)
         u = dequeue!(pq)
         ncandids = (((u[1:2] .+ _number_to_dir(u[3]))..., u[3]), (u[1], u[2], mod1(u[3] + 1, 4)), (u[1], u[2], mod1(u[3] - 1, 4)))
-        neighbours = [x for x ∈ ncandids if data[x[1:2]...] != '#']
+        nscores = (1, 1000, 1000)
+        neighbours = [(x, cost) for (x, cost) ∈ zip(ncandids, nscores) if data[x[1:2]...] != '#']
+        for (v, cost) ∈ neighbours
+            alt = dist[u] + cost
+            if alt < dist[v]
+                prev[v] = u
+                dist[v] = alt
+                pq[v] = alt
+            end
+        end
     end
-
+    return dist, prev
 end
 
 function part1(data)

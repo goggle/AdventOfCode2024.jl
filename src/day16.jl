@@ -11,6 +11,17 @@ function day16(input::String = readInput(joinpath(@__DIR__, "..", "data", "day16
     dist, prev = dijkstra(data)
     endpos = findall(x -> x == 'E', data)[1]
     p1 = minimum(dist[endpos.I..., i] for i ∈ 1:4)
+    # return prev
+    startpos = findall(x -> x == 'S', data)[1]
+    endpositions = Tuple{Int,Int,Int}[]
+    for i ∈ 1:4
+        if dist[endpos.I..., i] == p1
+            push!(endpositions, (endpos.I..., i))
+        end
+    end
+    p2 = part2(startpos, endpositions, prev, size(data)...)
+    return [p1, p2]
+    return p1
 end
 
 function dijkstra(data)
@@ -20,18 +31,23 @@ function dijkstra(data)
     dist = Dict{Tuple{Int,Int,Int},Int}()
     dist[startpos.I..., 2] = 0
     pq = PriorityQueue{Tuple{Int,Int,Int},Int}()
-    pq[startpos.I..., 2] = 0
-    prev = Dict{Tuple{Int,Int,Int},Tuple{Int,Int,Int}}()
+    # pq[startpos.I..., 2] = 0
+    prev = Dict{Tuple{Int,Int,Int},Vector{Tuple{Int,Int,Int}}}()
     for position ∈ findall(x -> x ∈ ('.', 'E', 'S'), data)
         for i ∈ 1:4
             v = (position.I..., i)
-            if v != (startpos.I..., 2)
-                prev[v] = (0, 0, 0)
-                dist[v] = typemax(Int)
-                pq[v] = typemax(Int)
-            end
+            # if v != (startpos.I..., 2)
+            #     prev[v] = []
+            #     dist[v] = typemax(Int)
+            #     pq[v] = typemax(Int)
+            # end
+            prev[v] = []
+            dist[v] = typemax(Int)
+            pq[v] = typemax(Int)
         end
     end
+    dist[startpos.I..., 2] = 0
+    pq[startpos.I..., 2] = 0
 
     while !isempty(pq)
         u = dequeue!(pq)
@@ -40,8 +56,12 @@ function dijkstra(data)
         neighbours = [(x, cost) for (x, cost) ∈ zip(ncandids, nscores) if data[x[1:2]...] != '#']
         for (v, cost) ∈ neighbours
             alt = dist[u] + cost
-            if alt < dist[v]
-                prev[v] = u
+            if alt <= dist[v]
+                # prev[v] = u
+                # push!(prev[v], u)
+                if u ∉ prev[v]
+                    push!(prev[v], u)
+                end
                 dist[v] = alt
                 pq[v] = alt
             end
@@ -50,45 +70,21 @@ function dijkstra(data)
     return dist, prev
 end
 
-function part1(data)
-    startpos = findall(x -> x == 'S', data)[1]
-    startdir = [0, 1]
-    endpos = findall(x -> x == 'E', data)[1]
-    println(endpos)
-    minscore = Dict{Tuple{Int,Int,Int},Int}()
-    # minscore[startpos.I..., _dir_to_number(startdir...)] = 0
-    walk!(minscore, data, 0, startpos, startdir, endpos)
-    candids = [minscore[endpos.I..., i] for i ∈ 1:4 if haskey(minscore, (endpos.I..., i))]
-    return minimum(candids)
-end
-
-function walk!(minscore::Dict{Tuple{Int,Int,Int},Int}, data::Matrix{Char}, score::Int, pos::CartesianIndex{2}, dir::Vector{Int}, endpos::CartesianIndex{2})
-    score > minimum([minscore[endpos.I..., i] for i ∈ 1:4 if haskey(minscore, (endpos.I..., i))]; init=Inf) && return
-    data[pos] == '#' && return
-    if !haskey(minscore, (pos.I..., _dir_to_number(dir...)))
-        minscore[pos.I..., _dir_to_number(dir...)] = score
-    elseif minscore[pos.I..., _dir_to_number(dir...)] > score
-        minscore[pos.I..., _dir_to_number(dir...)] = score
-    else
-        return
+function part2(startpos::CartesianIndex{2}, queue::Vector{Tuple{Int,Int,Int}}, prev::Dict{Tuple{Int,Int,Int},Vector{Tuple{Int,Int,Int}}}, nrows::Int, ncols::Int)
+    visited = zeros(Bool, nrows, ncols)
+    while !isempty(queue)
+        # println(queue)
+        elem = popfirst!(queue)
+        visited[elem[1:2]...] = true
+        # elem[1:2] == startpos.I && continue
+        # !haskey(prev, elem) && continue
+        for p ∈ prev[elem]
+            if p ∉ queue
+                push!(queue, p)
+            end
+        end
     end
-    pos == endpos && return
-    walk!(minscore, data, score + 1, CartesianIndex((pos.I .+ dir)...), dir, endpos)
-    if data[(pos.I .+ _turn_left(dir...))...] != '#'
-        walk!(minscore, data, score + 1000, pos, _turn_left(dir...), endpos)
-    end
-    if data[(pos.I .+ _turn_right(dir...))...] != '#'
-        walk!(minscore, data, score + 1000, pos, _turn_right(dir...), endpos)
-    end
-    # walk!(minscore, data, score + 1000, pos, _turn_left(dir...), endpos)
-    # walk!(minscore, data, score + 1000, pos, _turn_right(dir...), endpos)
-end
-
-function _dir_to_number(x, y)
-    x == -1 && return 1
-    y == 1 && return 2
-    x == 1 && return 3
-    y == -1 && return 4
+    return sum(visited)
 end
 
 function _number_to_dir(n)
@@ -97,8 +93,5 @@ function _number_to_dir(n)
     n == 3 && return [1, 0]
     n == 4 && return [0, -1]
 end
-
-_turn_left(x, y) = [0 -1; 1 0] * [x, y]
-_turn_right(x, y) = [0 1; -1 0] * [x, y]
 
 end # module

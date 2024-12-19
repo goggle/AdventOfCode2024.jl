@@ -268,5 +268,5 @@ end
               "####.....S###\n" *
               "#############\n"
     @test AdventOfCode2024.Day16.day16(sample4) == [4011, 17]
-    @test AdventOfCode2024.Day16.day16() == [105508, 547]
+    @test AdventOfCode2024.Day16.day16() == [105508, 548]
 end

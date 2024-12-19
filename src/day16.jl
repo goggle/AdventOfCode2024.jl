@@ -23,16 +23,6 @@ function day16(input::String = readInput(joinpath(@__DIR__, "..", "data", "day16
     return [p1, p2]
 end
 
-function p2(data, dstart, dend, p1)
-    on_shortest_path = zeros(Bool, size(data)...)
-    for pos ∈ findall(x -> x ∈ ('.', 'E', 'S'), data)
-        if any(dstart[pos.I..., i] + dend[pos.I..., i] .== p1 for i ∈ 1:4)
-            on_shortest_path[pos] = true
-        end
-    end
-    return on_shortest_path |> sum
-end
-
 function dijkstra(data, startpos)
     dist = Dict{Tuple{Int,Int,Int},Int}()
     dist[startpos.I..., 2] = 0

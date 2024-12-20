@@ -274,3 +274,35 @@ end
 @testset "Day 17" begin
     @test AdventOfCode2024.Day17.day17() == ["5,0,3,5,7,6,1,5,4", 164516454365621]
 end
+
+@testset "Day 18" begin
+    sample = "5,4\n" *
+             "4,2\n" *
+             "4,5\n" *
+             "3,0\n" *
+             "2,1\n" *
+             "6,3\n" *
+             "2,4\n" *
+             "1,5\n" *
+             "0,6\n" *
+             "3,3\n" *
+             "2,6\n" *
+             "5,1\n" *
+             "1,2\n" *
+             "5,5\n" *
+             "2,5\n" *
+             "6,5\n" *
+             "1,4\n" *
+             "0,4\n" *
+             "6,4\n" *
+             "1,1\n" *
+             "6,1\n" *
+             "1,0\n" *
+             "0,5\n" *
+             "1,6\n" *
+             "2,0\n"
+    data = [parse.(Int, split(x, ",")) for x ∈ split(rstrip(sample), "\n")]
+    @test AdventOfCode2024.Day18.reachable(data, 12; height=7, width=7)[2] == 22
+    @test AdventOfCode2024.Day18.part2(data; rindex=12, height=7, width=7) == "6,1"
+    @test AdventOfCode2024.Day18.day18() == [356, "22,33"]
+end

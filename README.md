@@ -24,17 +24,17 @@ This Julia package contains my solutions for [Advent of Code 2024](https://adven
 | 12 | [:white_check_mark:](https://adventofcode.com/2024/day/12) | 12.506 ms | 10.00 MiB | [:white_check_mark:](https://github.com/goggle/AdventOfCode2024.jl/blob/main/src/day12.jl) |
 | 13 | [:white_check_mark:](https://adventofcode.com/2024/day/13) | 3.423 ms | 1.15 MiB | [:white_check_mark:](https://github.com/goggle/AdventOfCode2024.jl/blob/main/src/day13.jl) |
 | 14 | [:white_check_mark:](https://adventofcode.com/2024/day/14) | 75.842 ms | 275.06 KiB | [:white_check_mark:](https://github.com/goggle/AdventOfCode2024.jl/blob/main/src/day14.jl) |
-<!-- | 15 | [:white_check_mark:](https://adventofcode.com/2024/day/15) | 2.647 ms | 1.49 MiB | [:white_check_mark:](https://github.com/goggle/AdventOfCode2024.jl/blob/main/src/day15.jl) | -->
 | 16 | [:white_check_mark:](https://adventofcode.com/2024/day/16) | TBD | 105.84 MiB | [:white_check_mark:](https://github.com/goggle/AdventOfCode2024.jl/blob/main/src/day16.jl) |
 | 17 | [:white_check_mark:](https://adventofcode.com/2024/day/17) | TBD | 706.30 KiB | [:white_check_mark:](https://github.com/goggle/AdventOfCode2024.jl/blob/main/src/day17.jl) |
 | 18 | [:white_check_mark:](https://adventofcode.com/2024/day/18) | TBD | 5.64 MiB | [:white_check_mark:](https://github.com/goggle/AdventOfCode2024.jl/blob/main/src/day18.jl) |
-<!-- | 19 | [:white_check_mark:](https://adventofcode.com/2024/day/19) | 2.559 ms | 1.79 MiB | [:white_check_mark:](https://github.com/goggle/AdventOfCode2024.jl/blob/main/src/day19.jl) | -->
+| 19 | [:white_check_mark:](https://adventofcode.com/2024/day/19) | TBD | 3.41 MiB| [:white_check_mark:](https://github.com/goggle/AdventOfCode2024.jl/blob/main/src/day19.jl) |
 <!-- | 20 | [:white_check_mark:](https://adventofcode.com/2024/day/20) | 65.710 ms | 28.76 MiB | [:white_check_mark:](https://github.com/goggle/AdventOfCode2024.jl/blob/main/src/day20.jl) | -->
 <!-- | 21 | [:white_check_mark:](https://adventofcode.com/2024/day/21) | 9.675 ms | 7.19 MiB | [:white_check_mark:](https://github.com/goggle/AdventOfCode2024.jl/blob/main/src/day21.jl) | -->
 <!-- | 22 | [:white_check_mark:](https://adventofcode.com/2024/day/22) | 790.712 ms | 631.26 MiB | [:white_check_mark:](https://github.com/goggle/AdventOfCode2024.jl/blob/main/src/day22.jl) | -->
 <!-- | 23 | [:white_check_mark:](https://adventofcode.com/2024/day/23) | 2.979 s | 9.69 MiB | [:white_check_mark:](https://github.com/goggle/AdventOfCode2024.jl/blob/main/src/day23.jl) | -->
 <!-- | 24 | [:white_check_mark:](https://adventofcode.com/2024/day/24) | 43.214 ms | 49.77 MiB | [:white_check_mark:](https://github.com/goggle/AdventOfCode2024.jl/blob/main/src/day24.jl) | -->
 <!-- | 25 | [:white_check_mark:](https://adventofcode.com/2024/day/25) | 69.476 ms | 62.03 MiB | [:white_check_mark:](https://github.com/goggle/AdventOfCode2024.jl/blob/main/src/day25.jl) | -->
+<!-- | 15 | [:white_check_mark:](https://adventofcode.com/2024/day/15) | 2.647 ms | 1.49 MiB | [:white_check_mark:](https://github.com/goggle/AdventOfCode2024.jl/blob/main/src/day15.jl) | -->
 
 
 The benchmarks have been measured on this machine:

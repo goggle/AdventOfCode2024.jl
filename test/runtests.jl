@@ -306,3 +306,18 @@ end
     @test AdventOfCode2024.Day18.part2(data; rindex=12, height=7, width=7) == "6,1"
     @test AdventOfCode2024.Day18.day18() == [356, "22,33"]
 end
+
+@testset "Day 19" begin
+    sample = "r, wr, b, g, bwu, rb, gb, br\n" *
+             "\n" *
+             "brwrr\n" *
+             "bggr\n" *
+             "gbbr\n" *
+             "rrbgbr\n" *
+             "ubwu\n" *
+             "bwurrg\n" *
+             "brgr\n" *
+             "bbrgwb\n"
+    @test AdventOfCode2024.Day19.day19(sample) == [6, 16]
+    @test AdventOfCode2024.Day19.day19() == [315, 625108891232249]
+end

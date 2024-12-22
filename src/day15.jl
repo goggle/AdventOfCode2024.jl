@@ -14,8 +14,23 @@ function parse_input(input)
 end
 
 function part1(world, instructions)
-    start = findall(x -> x == '@', world)[1]
+    current = findall(x -> x == '@', world)[1]
     world[start] = '.'
+    for instruction ∈ instructions
+        next = current + _to_dir(instruction)
+        if world[next] == '.'
+            current = next
+        elseif world[next] == 'O'
+        end
+
+    end
+end
+
+function _to_dir(c::Char)
+    c == 'v' && return CartesianIndex(1, 0)
+    c == '^' && return CartesianIndex(-1, 0)
+    c == '>' && return CartesianIndex(0, 1)
+    c == '<' && return CartesianIndex(0, -1)
 end
 
 end # module

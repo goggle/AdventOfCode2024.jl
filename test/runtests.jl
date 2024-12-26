@@ -207,6 +207,8 @@ end
              "<><^^>^^^<><vvvvv^v<v<<>^v<v>v<<^><<><<><<<^^<<<^<<>><<><^^^>^^<>^>v<>" *
              "^^>vv<^v^v<vv>^<><v<^v>^^^>>>^^vvv^>vvv<>>>^<^>>>>>^<<^v>^vvv<>^<><<v>" *
              "v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^\n"
+    @test AdventOfCode2024.Day15.day15(sample) == [10092, 9021]
+    @test AdventOfCode2024.Day15.day15() == [1492518, 1512860]
 end
 
 @testset "Day 16" begin

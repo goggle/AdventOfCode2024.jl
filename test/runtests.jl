@@ -343,3 +343,40 @@ end
 
     @test AdventOfCode2024.Day22.day22() == [13185239446, 1501]
 end
+
+@testset "Day 23" begin
+    sample = "kh-tc\n" *
+             "qp-kh\n" *
+             "de-cg\n" *
+             "ka-co\n" *
+             "yn-aq\n" *
+             "qp-ub\n" *
+             "cg-tb\n" *
+             "vc-aq\n" *
+             "tb-ka\n" *
+             "wh-tc\n" *
+             "yn-cg\n" *
+             "kh-ub\n" *
+             "ta-co\n" *
+             "de-co\n" *
+             "tc-td\n" *
+             "tb-wq\n" *
+             "wh-td\n" *
+             "ta-ka\n" *
+             "td-qp\n" *
+             "aq-cg\n" *
+             "wq-ub\n" *
+             "ub-vc\n" *
+             "de-ta\n" *
+             "wq-aq\n" *
+             "wq-vc\n" *
+             "wh-yn\n" *
+             "ka-de\n" *
+             "kh-ta\n" *
+             "co-tc\n" *
+             "wh-qp\n" *
+             "tb-vc\n" *
+             "td-yn\n"
+    @test AdventOfCode2024.Day23.day23(sample) == [7, "co,de,ka,ta"]
+    @test AdventOfCode2024.Day23.day23() == [1368, "dd,ig,il,im,kb,kr,pe,ti,tv,vr,we,xu,zi"]
+end

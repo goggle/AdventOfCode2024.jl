@@ -327,3 +327,19 @@ end
 @testset "Day 20" begin
     @testset AdventOfCode2024.Day20.day20() == [1411, 1010263]
 end
+
+@testset "Day 22" begin
+    sample = "1\n" *
+             "10\n" *
+             "100\n" *
+             "2024\n"
+    @test AdventOfCode2024.Day22.day22(sample) == [37327623, 24]
+
+    sample2 = "1\n" *
+              "2\n" *
+              "3\n" *
+              "2024\n"
+    @test AdventOfCode2024.Day22.day22(sample2) == [37990510, 23]
+
+    @test AdventOfCode2024.Day22.day22() == [13185239446, 1501]
+end

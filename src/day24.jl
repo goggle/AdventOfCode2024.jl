@@ -4,10 +4,10 @@ using AdventOfCode2024
 
 function day24(input::String = readInput(joinpath(@__DIR__, "..", "data", "day24.txt")))
     x, y, rules = parse_input(input)
-    p1, _ = run(x, y, rules, nothing)
+    p1, ruleorder = run(x, y, rules, nothing)
 
     swapped_outputs = []
-    _, wrong_adders = check_adders(rules, Int[])
+    wrong_adders = [i for i ∈ 0:44 if !check_adders_at_indices(rules, [i]; ruleorder)[1]]
 
     sequences = find_sequences(wrong_adders)
     for sequence ∈ sequences
@@ -91,7 +91,7 @@ function parse_input(input::AbstractString)
     return x, y, rule
 end
 
-function run(x::Int, y::Int, rules::Vector{NTuple{4, String}}, ruleorder::Nothing)
+function run(x::Int, y::Int, rules::Vector{NTuple{4, String}}, _::Nothing)
     state = Dict{String,Bool}()
     unused_rules = Set(1:length(rules))
     prev_length = length(unused_rules) + 1
@@ -196,8 +196,6 @@ function run(x::Int, y::Int, rules::Vector{NTuple{4, String}}, ruleorder::Vector
     return result, ruleorder
 end
 
-
-
 function needed_rules(rules::Vector{NTuple{4, String}}, outinds::Vector{Int})
     ruleinds = Set{Int}()
     reg = r"[xy]\d{2}"
@@ -214,27 +212,6 @@ function needed_rules(rules::Vector{NTuple{4, String}}, outinds::Vector{Int})
         end
     end
     return ruleinds
-end
-
-function check_adders(rules::Vector{NTuple{4, String}}, ignore_indices::Vector{Int}; ruleorder::Union{Vector{Int},Nothing} = nothing)
-    wrong = Int[]
-    xi = (0, 0, 1, 1, 0, 1, 0, 1)
-    yi = (0, 1, 0, 1, 0, 0, 1, 1)
-    cprev = (0, 0, 0, 0, 1, 1, 1, 1)
-    for index ∈ setdiff(0:44, ignore_indices)
-        iter = index == 0 ? (1:4) : (1:8)
-        for i ∈ iter
-            x = (xi[i] << index) + (cprev[i] << (index - 1))
-            y = (yi[i] << index) + (cprev[i] << (index - 1))
-            result, ruleorder = run(x, y, rules, ruleorder)
-            result == -1 && return false, wrong
-            if result != x + y
-                push!(wrong, index)
-                break
-            end
-        end
-    end
-    return true, wrong
 end
 
 function check_adders_at_indices(rules::Vector{NTuple{4, String}}, indices::Vector{Int}; ruleorder::Union{Vector{Int},Nothing} = nothing)

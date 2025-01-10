@@ -8,28 +8,23 @@ function day24(input::String = readInput(joinpath(@__DIR__, "..", "data", "day24
 
     swapped_outputs = []
     _, wrong_adders = check_adders(rules, Int[])
-    println("wrong_adders = $wrong_adders")
 
     sequences = find_sequences(wrong_adders)
-
     for sequence ∈ sequences
         nrules = needed_rules(rules, sequence)
-        # ruleorder = nothing
         for collection ∈ (nrules, setdiff(1:length(rules), nrules))
             stop = false
             for ri ∈ collection
-                println("ri = $ri")
                 for rj ∈ nrules
                     first, second = swap_outputs!(rules, ri , rj)
                     corrects_critical_gates, ruleorder = check_adders_at_indices(rules, sequence)
                     if corrects_critical_gates
-                        success, wrinds = check_adders(rules, sequence; ruleorder)
-                        if success && issubset(wrinds, wrong_adders)
-                            println("SUCCESS: $first, $second, (ri, rj) = ($ri, $rj), wrinds = $wrinds")
+                        success, _ = check_adders_at_indices(rules, setdiff(0:44, wrong_adders); ruleorder)
+                        if success
                             push!(swapped_outputs, first)
                             push!(swapped_outputs, second)
                             stop = true
-                            wrong_adders = wrinds
+                            wrong_adders = setdiff(wrong_adders, sequence)
                             break
                         end
                     end
@@ -95,85 +90,6 @@ function parse_input(input::AbstractString)
     end
     return x, y, rule
 end
-
-# function run(x::Int, y::Int, rules::Vector{NTuple{4, String}}; ruleorder::Vector{Int} = Int[])
-#     state = Dict{String,Bool}()
-#     unused_rules = Set(1:length(rules))
-#     prev_length = length(unused_rules) + 1
-#     reg = r"([xy])(\d{2})"
-#     if isempty(ruleorder)
-#         useruleorder = false
-#         ruleorder = zeros(Int, length(rules))
-#     elseif any(ruleorder .== 0)
-#         return -1, ruleorder
-#     else
-#         useruleorder = true
-#     end
-
-#     i = 1
-#     while !isempty(unused_rules) && length(unused_rules) < prev_length
-#         prev_length = length(unused_rules)
-
-#         if useruleorder
-#             rulies = ruleorder
-#         else
-#             rulies = copy(unused_rules)
-#         end
-#         for ri ∈ rulies
-#             rule = rules[ri]
-#             values = [false, false]
-#             found = false
-#             for i ∈ 2:3
-#                 m = match(reg, rule[i])
-#                 if m !== nothing
-#                     found = true
-#                     index = parse(Int, m.captures[2])
-#                     if m.captures[1] == "x"
-#                         values[i-1] = (x >> index) % 2
-#                     else
-#                         values[i-1] = (y >> index) % 2
-#                     end
-#                 else
-#                     if haskey(state, rule[i])
-#                         found = true
-#                         values[i-1] = state[rule[i]]
-#                     else
-#                         found = false
-#                         break
-#                     end
-#                 end
-#             end
-#             if found
-#                 delete!(unused_rules, ri)
-#                 if i ∉ (1:222)
-#                     println(i)
-#                 end
-#                 ruleorder[i] = ri
-#                 i += 1
-#                 if rule[1] == "AND"
-#                     state[rule[4]] = values[1] & values[2]
-#                 elseif rule[1] == "OR"
-#                     state[rule[4]] = values[1] | values[2]
-#                 elseif rule[1] == "XOR"
-#                     state[rule[4]] = values[1] ⊻ values[2]
-#                 end
-#             end
-#         end
-#     end
-
-#     !isempty(unused_rules) && return -1, ruleorder
-
-#     result = 0
-#     i = 0
-#     while true
-#         id = _to_id(i, "z")
-#         !haskey(state, id) && break
-#         result += state[id] << i
-#         i += 1
-#     end
-#     return result, ruleorder
-# end
-
 
 function run(x::Int, y::Int, rules::Vector{NTuple{4, String}}, ruleorder::Nothing)
     state = Dict{String,Bool}()

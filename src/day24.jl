@@ -6,23 +6,37 @@ function day24(input::String = readInput(joinpath(@__DIR__, "..", "data", "day24
     x, y, rules = parse_input(input)
     p1, ruleorder = run(x, y, rules, nothing)
 
-    swapped_outputs = []
+    swapped_outputs = String[]
+    swapped_inds = Int[]
     wrong_adders = [i for i ∈ 0:44 if !check_adders_at_indices(rules, [i]; ruleorder)[1]]
+
+    # rules of the form "xyz OR/ADD abc -> zdf" are probably wrong and need to be swapped
+    suspicious_rules = findall(x -> startswith(x[4], "z") && x[4] != "z45" && x[1] != "XOR", rules)
 
     sequences = find_sequences(wrong_adders)
     for sequence ∈ sequences
-        nrules = needed_rules(rules, sequence)
+
+        # put the suspicious rules to the beginning of the needed rules§
+        nrules = needed_rules(rules, sequence) |> collect
+        for susrule ∈ suspicious_rules
+            if susrule ∈ nrules && susrule ∉ swapped_inds
+                filter!(x -> x != susrule, nrules)
+                pushfirst!(nrules, susrule)
+            end
+        end
+
         for collection ∈ (nrules, setdiff(1:length(rules), nrules))
             stop = false
             for ri ∈ collection
                 for rj ∈ nrules
+                    ri == rj && continue
                     first, second = swap_outputs!(rules, ri , rj)
                     corrects_critical_gates, ruleorder = check_adders_at_indices(rules, sequence)
                     if corrects_critical_gates
                         success, _ = check_adders_at_indices(rules, setdiff(0:44, wrong_adders); ruleorder)
                         if success
-                            push!(swapped_outputs, first)
-                            push!(swapped_outputs, second)
+                            push!(swapped_outputs, (first, second)...)
+                            push!(swapped_inds, (ri, rj)...)
                             stop = true
                             wrong_adders = setdiff(wrong_adders, sequence)
                             break

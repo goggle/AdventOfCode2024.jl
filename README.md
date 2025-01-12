@@ -34,7 +34,7 @@ This Julia package contains my solutions for [Advent of Code 2024](https://adven
 | 22 | [:white_check_mark:](https://adventofcode.com/2024/day/22) | 241.724 ms | 78.80 MiB | [:white_check_mark:](https://github.com/goggle/AdventOfCode2024.jl/blob/main/src/day22.jl) |
 | 23 | [:white_check_mark:](https://adventofcode.com/2024/day/23) | 4.197 ms | 3.82 MiB | [:white_check_mark:](https://github.com/goggle/AdventOfCode2024.jl/blob/main/src/day23.jl) |
 | 24 | [:white_check_mark:](https://adventofcode.com/2024/day/24) | 5.658 s | 3.28 GiB | [:white_check_mark:](https://github.com/goggle/AdventOfCode2024.jl/blob/main/src/day24.jl) |
-<!-- | 25 | [:white_check_mark:](https://adventofcode.com/2024/day/25) | 69.476 ms | 62.03 MiB | [:white_check_mark:](https://github.com/goggle/AdventOfCode2024.jl/blob/main/src/day25.jl) | -->
+| 25 | [:white_check_mark:](https://adventofcode.com/2024/day/25) | 2.178 ms | 3.47 MiB | [:white_check_mark:](https://github.com/goggle/AdventOfCode2024.jl/blob/main/src/day25.jl) |
 
 
 The benchmarks have been measured on this machine:

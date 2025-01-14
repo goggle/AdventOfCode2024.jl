@@ -229,11 +229,11 @@ function needed_rules(rules::Vector{NTuple{4, String}}, outinds::Vector{Int})
 end
 
 function check_adders_at_indices(rules::Vector{NTuple{4, String}}, indices::Vector{Int}; ruleorder::Union{Vector{Int},Nothing} = nothing)
-    xi = (0, 0, 1, 1, 0, 1, 0, 1)
-    yi = (0, 1, 0, 1, 0, 0, 1, 1)
-    cprev = (0, 0, 0, 0, 1, 1, 1, 1)
+    xi    = (1, 1, 0, 1, 1)
+    yi    = (0, 1, 0, 0, 1)
+    cprev = (0, 0, 1, 1, 1)
     for index ∈ indices
-        iter = index == 0 ? (1:4) : (1:8)
+        iter = index == 0 ? (1:2) : (1:5)
         for i ∈ iter
             x = (xi[i] << index) + (cprev[i] << (index - 1))
             y = (yi[i] << index) + (cprev[i] << (index - 1))

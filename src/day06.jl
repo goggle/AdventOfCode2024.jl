@@ -30,13 +30,13 @@ end
 function part2(data::Matrix{Char}, positions::Set{CartesianIndex{2}})
     start = findall(x -> x == '^', data)[1]
     graph = build_graph(data)
+    _, firstpos = walk(data, start, number_to_dir(1))
+    graph[(start[1], start[2], 1)] = (firstpos[1], firstpos[2], 1, true)
     ncircles = 0
 
     for obstacle ∈ positions
-        obsx = obstacle[1]
-        obsy = obstacle[2]
-        pgraph = build_priority_graph(graph, data, CartesianIndex(obsx, obsy))
-        data[obsx, obsy] = '#'
+        pgraph = build_priority_graph(graph, data, CartesianIndex(obstacle[1], obstacle[2]))
+        data[obstacle[1], obstacle[2]] = '#'
 
         seen = Set{Tuple{Int,Int,Int}}()
         x = start[1]
@@ -45,7 +45,7 @@ function part2(data::Matrix{Char}, positions::Set{CartesianIndex{2}})
         iscircle = false
         pgraphused = false
         while true
-            x, y, d, cont, frompgraph = next(data, graph, pgraph, x, y, d)
+            x, y, d, cont, frompgraph = next(graph, pgraph, x, y, d)
             if !pgraphused && frompgraph
                 pgraphused = true
             end
@@ -57,7 +57,7 @@ function part2(data::Matrix{Char}, positions::Set{CartesianIndex{2}})
             push!(seen, (x, y, d))
         end
 
-        data[obsx, obsy] = '.'
+        data[obstacle[1], obstacle[2]] = '.'
         if iscircle
             ncircles += 1
         end
@@ -65,14 +65,11 @@ function part2(data::Matrix{Char}, positions::Set{CartesianIndex{2}})
     return ncircles
 end
 
-function next(data::Matrix{Char}, graph::Dict{Tuple{Int,Int,Int},Tuple{Int,Int,Int,Bool}}, pgraph::Dict{Tuple{Int,Int,Int},Tuple{Int,Int,Int,Bool}}, x::Int, y::Int, d::Int)
+function next(graph::Dict{Tuple{Int,Int,Int},Tuple{Int,Int,Int,Bool}}, pgraph::Dict{Tuple{Int,Int,Int},Tuple{Int,Int,Int,Bool}}, x::Int, y::Int, d::Int)
     if haskey(pgraph, (x, y, d))
         return (pgraph[(x, y, d)]..., true)
     elseif haskey(graph, (x, y, d))
         return (graph[(x, y, d)]..., false)
-    else
-        out, pos = walk(data, CartesianIndex(x, y), number_to_dir(d))
-        return pos[1], pos[2], d, !out, false
     end
 end
 

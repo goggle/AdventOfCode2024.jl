@@ -12,9 +12,9 @@ function day17(input::String = readInput(joinpath(@__DIR__, "..", "data", "day17
     p2 = 0
     for elem ∈ sequence
         p2 += elem
-        p2 *= 8
+        p2 <<= 3
     end
-    p2 ÷= 8
+    p2 >>= 3
 
     return [p1, p2]
 end
@@ -37,7 +37,7 @@ function find_sequence(registers, instructions)
             if out[1] == instructions[end - depth + 1]
                 push!(sequence, value)
                 old_current = current_value
-                current_value = new_current * 8
+                current_value = new_current << 3
                 if try_next_value(depth + 1)
                     return true
                 end

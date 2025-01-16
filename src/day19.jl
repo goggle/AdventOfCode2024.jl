@@ -21,8 +21,8 @@ end
 
 function parse_input(input)
     top, bottom = split(input, "\n\n")
-    towelpatterns = string.(split(top, ", "))
-    designs = string.(split(rstrip(bottom), "\n"))
+    towelpatterns = string.(eachsplit(top, ", "))
+    designs = string.(eachsplit(rstrip(bottom), "\n"))
     return towelpatterns, designs
 end
 

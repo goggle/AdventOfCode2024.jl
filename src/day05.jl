@@ -23,7 +23,7 @@ function parse_input(input)
     return rules, numbers
 end
 
-function solve(rules, numbers)
+function solve(rules::Dict{Int,Vector{Int}}, numbers::Vector{Vector{Int}})
     p1, p2 = 0, 0
     for nvec ∈ numbers
         if valid(rules, nvec)
@@ -35,7 +35,7 @@ function solve(rules, numbers)
     return [p1, p2]
 end
 
-function valid(rules, numbers)
+function valid(rules::Dict{Int,Vector{Int}}, numbers::Vector{Int})
     for i ∈ eachindex(numbers)
         for j ∈ 1:i-1
             haskey(rules, numbers[i]) && numbers[j] ∈ rules[numbers[i]] && return false
@@ -44,7 +44,7 @@ function valid(rules, numbers)
     return true
 end
 
-function correct(rules, numbers)
+function correct(rules::Dict{Int,Vector{Int}}, numbers::Vector{Int})
     cont = true
     while cont
         cont = false

@@ -12,18 +12,17 @@ function day16(input::String = readInput(joinpath(@__DIR__, "..", "data", "day16
     endpos = findall(x -> x == 'E', data)[1]
     p1 = minimum(dist[endpos.I..., i] for i ∈ 1:4)
 
-    startpos = findall(x -> x == 'S', data)[1]
     endpositions = Tuple{Int,Int,Int}[]
     for i ∈ 1:4
         if dist[endpos.I..., i] == p1
             push!(endpositions, (endpos.I..., i))
         end
     end
-    p2 = part2(startpos, endpositions, prev, size(data)...)
+    p2 = part2(endpositions, prev, size(data)...)
     return [p1, p2]
 end
 
-function dijkstra(data, startpos)
+function dijkstra(data::Matrix{Char}, startpos::CartesianIndex{2})
     dist = Dict{Tuple{Int,Int,Int},Int}()
     dist[startpos.I..., 2] = 0
     pq = PriorityQueue{Tuple{Int,Int,Int},Int}()
@@ -59,7 +58,7 @@ function dijkstra(data, startpos)
     return dist, prev
 end
 
-function part2(startpos::CartesianIndex{2}, queue::Vector{Tuple{Int,Int,Int}}, prev::Dict{Tuple{Int,Int,Int},Vector{Tuple{Int,Int,Int}}}, nrows::Int, ncols::Int)
+function part2(queue::Vector{Tuple{Int,Int,Int}}, prev::Dict{Tuple{Int,Int,Int},Vector{Tuple{Int,Int,Int}}}, nrows::Int, ncols::Int)
     visited = zeros(Bool, nrows, ncols)
     while !isempty(queue)
         elem = popfirst!(queue)
@@ -74,10 +73,10 @@ function part2(startpos::CartesianIndex{2}, queue::Vector{Tuple{Int,Int,Int}}, p
 end
 
 function _number_to_dir(n)
-    n == 1 && return [-1, 0]
-    n == 2 && return [0, 1]
-    n == 3 && return [1, 0]
-    n == 4 && return [0, -1]
+    n == 1 && return (-1, 0)
+    n == 2 && return (0, 1)
+    n == 3 && return (1, 0)
+    n == 4 && return (0, -1)
 end
 
 end # module

@@ -4,13 +4,13 @@ using AdventOfCode2024
 
 
 function day18(input::String = readInput(joinpath(@__DIR__, "..", "data", "day18.txt")))
-    data = [parse.(Int, split(x, ",")) for x ∈ split(rstrip(input), "\n")]
+    data = [parse.(Int, split(x, ",")) for x ∈ eachsplit(rstrip(input), "\n")]
     p1 = reachable(data, 1024)[2]
     p2 = part2(data)
     return [p1, p2]
 end
 
-function part2(data; rindex=1024, height=71, width=71)
+function part2(data::Vector{Vector{Int}}; rindex::Int=1024, height::Int=71, width::Int=71)
     nrindex = length(data)
     while nrindex - rindex != 1
         mindex = (rindex + nrindex) ÷ 2
@@ -23,7 +23,7 @@ function part2(data; rindex=1024, height=71, width=71)
     return join(data[nrindex], ",")
 end
 
-function reachable(data, nbytes; height=71, width=71)
+function reachable(data::Vector{Vector{Int}}, nbytes::Int; height::Int=71, width::Int=71)
     board = Matrix{Char}(undef, height, width)
     for i ∈ eachindex(board)
         board[i] = '.'

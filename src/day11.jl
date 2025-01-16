@@ -48,9 +48,10 @@ function solve(data, runtime)
 end
 
 function split_number(number::Int)
-    n = length(digits(number))
-    l = digits(number)[n÷2+1:end] .* [10^x for x ∈ 0:n÷2-1] |> sum
-    r = digits(number)[1:n÷2] .* [10^x for x ∈ 0:n÷2-1] |> sum
+    digs = digits(number)
+    n = length(digs)
+    l = @view(digs[n÷2+1:end]) .* [10^x for x ∈ 0:n÷2-1] |> sum
+    r = @view(digs[1:n÷2]) .* [10^x for x ∈ 0:n÷2-1] |> sum
     return l, r
 end
 

@@ -9,7 +9,7 @@ function day07(input::String = readInput(joinpath(@__DIR__, "..", "data", "day07
 end
 
 function parse_input(input)
-    data = [(x, y) for (x, y) ∈ split.(split(rstrip(input), '\n'), ':')]
+    data = [(x, y) for (x, y) ∈ eachsplit.(eachsplit(rstrip(input), '\n'), ':')]
     test_values = [parse(Int, x[1]) for x ∈ data]
     numbers = [parse.(Int, split(lstrip(x[2]))) for x ∈ data]
     return test_values, numbers

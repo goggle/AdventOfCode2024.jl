@@ -10,8 +10,7 @@ end
 
 function solve(data)
     p1, p2 = 0, 0
-    visited = similar(data, Bool)
-    visited .= false
+    visited = zeros(Bool, size(data))
     
     for i ∈ eachindex(view(data, 1:size(data, 1), 1:size(data, 2)))
         visited[i] && continue

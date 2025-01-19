@@ -22,7 +22,7 @@ function parse_input(input)
     current_id = 0
     current_index = 1
     i = 1
-    while i < length(digits)
+    @inbounds while i < length(digits)
         push!(disk, (current_index, digits[i] + digits[i+1], digits[i], current_id))
         current_index += digits[i] + digits[i+1]
         current_id += 1
@@ -34,7 +34,7 @@ end
 function part1!(blocks::Vector{MVector{4,Int}})
     data = generate_disk(blocks)
     i, j = 1, length(blocks)
-    while i < j
+    @inbounds while i < j
         freeindex = blocks[i][1] + blocks[i][3]
         free = blocks[i][2] - blocks[i][3]
         maxtransfer = blocks[j][3]
@@ -56,7 +56,7 @@ end
 function part2!(blocks::Vector{MVector{4,Int}})
     data = generate_disk(blocks)
     original_usage = [b[3] for b ∈ blocks]
-    for j ∈ reverse(axes(blocks, 1))
+    @inbounds for j ∈ reverse(axes(blocks, 1))
         transfer = original_usage[j]
         for i ∈ 1:j-1
             free = blocks[i][2] - blocks[i][3]
@@ -75,14 +75,14 @@ end
 function generate_disk(blocks::Vector{MVector{4,Int}})
     data = -1 * ones(Int, blocks[end][1] + blocks[end][2] - 1)
     for block ∈ blocks
-        data[block[1]:block[1]+block[3]-1] .= block[4]
+        @inbounds data[block[1]:block[1]+block[3]-1] .= block[4]
     end
     return data
 end
 
 function checksum(data::Vector{Int})
     s, i = 0, 1
-    while i < length(data)
+    @inbounds while i < length(data)
         if data[i] == -1
             i += 1
             continue

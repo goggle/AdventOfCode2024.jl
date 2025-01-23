@@ -4,41 +4,44 @@ using AdventOfCode2024
 
 
 function day06(input::String = readInput(joinpath(@__DIR__, "..", "data", "day06.txt")))
-    data = map(x -> x[1], reduce(vcat, permutedims.(map(x -> split(x, ""), split(input)))))
-    p1, positions = part1(data)
-    p2 = part2(data, positions)
+    data = stack(split(rstrip(input), '\n'), dims=1)
+    H, W = size(data)
+    p1, positions = part1(data, H, W)
+    p2 = part2(data, H, W, positions)
     return [p1, p2]
 end
 
-function part1(data::Matrix{Char})
+function part1(data::Matrix{Char}, H::Int, W::Int)
     pos = start = findall(x -> x == '^', data)[1]
-    dir = (-1, 0)
-    positions = Set{CartesianIndex{2}}([pos])
+    d = 1
+    positions = falses(size(data))
+    positions[start] = true
     while true
-        npos = CartesianIndex((pos.I .+ dir)...)
-        !checkbounds(Bool, data, npos) && break
+        npos = CartesianIndex((pos.I .+ DIRS[d])...)
+        (npos[1] < 1 || npos[1] > H || npos[2] < 1 || npos[2] > W) && break
         if data[npos] == '#'
-            dir = turn_right(dir)
+            d = turn_right(d)
             continue
         end
         pos = npos
-        push!(positions, pos)
+        positions[pos] = true
     end
-    return length(positions), delete!(positions, start)
+    positions[start] = false
+    return sum(positions), positions
 end
 
-function part2(data::Matrix{Char}, positions::Set{CartesianIndex{2}})
+function part2(data::Matrix{Char}, H::Int, W::Int, positions::BitMatrix)
     start = findall(x -> x == '^', data)[1]
-    graph = build_graph(data)
-    _, firstpos = walk(data, start, number_to_dir(1))
+    graph = build_graph(data, H, W)
+    _, firstpos = walk(data, H, W, start, 1)
     graph[(start[1], start[2], 1)] = (firstpos[1], firstpos[2], 1, true)
     ncircles = 0
 
-    for obstacle ∈ positions
-        pgraph = build_priority_graph(graph, data, CartesianIndex(obstacle[1], obstacle[2]))
+    for obstacle ∈ findall(x -> x == true, positions)
+        pgraph = build_priority_graph(graph, data, H, W, CartesianIndex(obstacle[1], obstacle[2]))
         data[obstacle[1], obstacle[2]] = '#'
 
-        seen = Set{Tuple{Int,Int,Int}}()
+        seen = falses(H, W, 4)
         x = start[1]
         y = start[2]
         d = 1
@@ -49,12 +52,12 @@ function part2(data::Matrix{Char}, positions::Set{CartesianIndex{2}})
             if !pgraphused && frompgraph
                 pgraphused = true
             end
-            if pgraphused && (x, y, d) ∈ seen
+            if pgraphused && seen[x, y, d]
                 iscircle = true
                 break
             end
             !cont && break
-            push!(seen, (x, y, d))
+            seen[x, y, d] = true
         end
 
         data[obstacle[1], obstacle[2]] = '.'
@@ -73,10 +76,10 @@ function next(graph::Dict{Tuple{Int,Int,Int},Tuple{Int,Int,Int,Bool}}, pgraph::D
     end
 end
 
-function walk(data::Matrix{Char}, pos::CartesianIndex{2}, dir::Tuple{Int,Int})
+function walk(data::Matrix{Char}, H::Int, W::Int, pos::CartesianIndex{2}, dir::Int)
     while true
-        npos = CartesianIndex((pos.I .+ dir)...)
-        !checkbounds(Bool, data, npos) && return true, pos
+        npos = CartesianIndex((pos.I .+ DIRS[dir])...)
+        (npos[1] < 1 || npos[1] > H || npos[2] < 1 || npos[2] > W) && return true, pos
         if data[npos] == '#'
             return false, pos
         end
@@ -84,37 +87,37 @@ function walk(data::Matrix{Char}, pos::CartesianIndex{2}, dir::Tuple{Int,Int})
     end
 end
 
-function build_graph(data::Matrix{Char})
+function build_graph(data::Matrix{Char}, H::Int, W::Int)
     graph = Dict{Tuple{Int,Int,Int},Tuple{Int,Int,Int,Bool}}()
     obstacles = findall(x -> x == '#', data)
     for obs ∈ obstacles
-        _add_obstacle_to_graph!(graph, data, obs)
+        _add_obstacle_to_graph!(graph, data, H, W, obs)
     end
     return graph
 end
 
-function _add_obstacle_to_graph!(graph::Dict{Tuple{Int,Int,Int},Tuple{Int,Int,Int,Bool}}, data::Matrix{Char}, obs::CartesianIndex{2})
+function _add_obstacle_to_graph!(graph::Dict{Tuple{Int,Int,Int},Tuple{Int,Int,Int,Bool}}, data::Matrix{Char}, H::Int, W::Int, obs::CartesianIndex{2})
     for d ∈ 1:4
-        pos = CartesianIndex((obs.I .+ number_to_dir(d))...)
-        if checkbounds(Bool, data, pos)
+        pos = CartesianIndex((obs.I .+ DIRS[d])...)
+        if 1 <= pos[1] <= H && 1 <= pos[2] <= W
             confrontdir = opposite(d)
             walkingdir = turn_right(confrontdir)
-            out, nextpos = walk(data, pos, number_to_dir(walkingdir))
+            out, nextpos = walk(data, H, W, pos, walkingdir)
             graph[(pos[1], pos[2], confrontdir)] = (nextpos[1], nextpos[2], walkingdir, !out)
         end
     end
 end
 
-function build_priority_graph(graph::Dict{Tuple{Int,Int,Int},Tuple{Int,Int,Int,Bool}}, data::Matrix{Char}, obs::CartesianIndex{2})
+function build_priority_graph(graph::Dict{Tuple{Int,Int,Int},Tuple{Int,Int,Int,Bool}}, data::Matrix{Char}, H::Int, W::Int, obs::CartesianIndex{2})
     pgraph = Dict{Tuple{Int,Int,Int},Tuple{Int,Int,Int,Bool}}()
-    _add_obstacle_to_graph!(pgraph, data, obs)
+    _add_obstacle_to_graph!(pgraph, data, H, W, obs)
 
-    positions = [CartesianIndex((obs.I .+ number_to_dir(d))...) for d ∈ 1:4]
+    positions = [CartesianIndex((obs.I .+ DIRS[d])...) for d ∈ 1:4]
     for (key, value) ∈ graph
         minmaxx = minmax(key[1], value[1])
         minmaxy = minmax(key[2], value[2])
         for d ∈ 1:4
-            if key[3] == turn_right(d) && positions[d][1] ∈ minmaxx[1]:minmaxx[2] && positions[d][2] ∈ minmaxy[1]:minmaxy[2] && checkbounds(Bool, data, positions[d])
+            if key[3] == turn_right(d) && positions[d][1] ∈ minmaxx[1]:minmaxx[2] && positions[d][2] ∈ minmaxy[1]:minmaxy[2] && 1 <= positions[d][1] <= H && 1 <= positions[d][2] <= W
                 pgraph[key] = (positions[d][1], positions[d][2], opposite(d), true)
             end
         end
@@ -123,28 +126,9 @@ function build_priority_graph(graph::Dict{Tuple{Int,Int,Int},Tuple{Int,Int,Int,B
     return pgraph
 end
 
-turn_right(dir::Tuple{Int,Int}) = [0 1 ; -1 0] * collect(dir) |> Tuple
-turn_right(n::Int) = mod1(n + 1, 4)
-
-function dir_to_number(dir::Tuple{Int,Int})
-    dir[1] == -1 && dir[2] == 0 && return 1
-    dir[1] == 0 && dir[2] == 1 && return 2
-    dir[1] == 1 && dir[2] == 0 && return 3
-    dir[1] == 0 && dir[2] == -1 && return 4
-end
-
-function number_to_dir(n::Int)
-    n == 1 && return (-1, 0)
-    n == 2 && return (0, 1)
-    n == 3 && return (1, 0)
-    n == 4 && return (0, -1)
-end
-
-function opposite(n::Int)
-    n == 1 && return 3
-    n == 2 && return 4
-    n == 3 && return 1
-    n == 4 && return 2
-end
+const DIRS = [(-1,0), (0,1), (1,0), (0,-1)]  # N, E, S, W
+turn_right(d::Int) = mod1(d+1, 4)
+turn_left(d::Int) = mod1(d-1, 4)
+opposite(d::Int) = mod1(d+2, 4)
 
 end # module

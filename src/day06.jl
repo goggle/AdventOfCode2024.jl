@@ -27,7 +27,7 @@ function part1(data::Matrix{Char}, H::Int, W::Int)
         positions[pos] = true
     end
     positions[start] = false
-    return sum(positions), positions
+    return sum(positions) + 1, positions
 end
 
 function part2(data::Matrix{Char}, H::Int, W::Int, positions::BitMatrix)

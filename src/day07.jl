@@ -13,7 +13,7 @@ function parse_input(input)
     numbers = Vector{Int}[]
     concat_factors = Vector{Int}[]
     
-    for line in lines
+    for line ∈ lines
         left, right = split(line, ':')
         nums = parse.(Int, split(right))
         factors = [10^ndigits(n) for n in nums]
@@ -27,17 +27,12 @@ end
 
 function solve(test_values::Vector{Int}, numbers::Vector{Vector{Int}}, concat_factors::Vector{Vector{Int}})
     p1 = p2 = 0
-    for i in eachindex(test_values)
+    for i ∈ eachindex(test_values)
         nums = numbers[i]
-        isempty(nums) && continue
-        tv = test_values[i]
-        cf = concat_factors[i]
-        
-        valid1 = _valid_p1(tv, nums[1], 2, nums)
-        valid2 = valid1 ? true : _valid_p2(tv, nums[1], 2, nums, cf)
-        
-        p1 += valid1 * tv
-        p2 += (valid1 || valid2) * tv
+        valid1 = _valid_p1(test_values[i], nums[1], 2, nums)
+        valid2 = valid1 ? true : _valid_p2(test_values[i], nums[1], 2, nums, concat_factors[i])
+        p1 += valid1 * test_values[i]
+        p2 += (valid1 || valid2) * test_values[i]
     end
     return [p1, p2]
 end

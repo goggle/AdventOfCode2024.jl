@@ -248,3 +248,200 @@ function check_adders_at_indices(rules::Vector{NTuple{4, String}}, indices::Vect
 end
 
 end # module
+
+
+# module Day24
+
+# using AdventOfCode2024
+
+# struct Gate
+#     op::Symbol       # :AND, :OR, :XOR
+#     in1::Int         # Input index
+#     in2::Int         # Input index
+#     out::Int         # Output index
+# end
+
+# function parse_input(input::String)
+#     sections = split(input, "\n\n")
+#     init_section, rules_section = sections[1], sections[2]
+
+#     # Parse initial x/y values using bitwise operations
+#     x = y = 0
+#     for line in split(init_section, '\n')
+#         parts = split(line, r"[: ]+", keepempty=false)
+#         bit = parse(Int, parts[3])
+#         idx = parse(Int, parts[1][2:end])
+#         if parts[1][1] == 'x'
+#             x |= bit << idx
+#         else
+#             y |= bit << idx
+#         end
+#     end
+
+#     # Create node index mapping
+#     node_map = Dict{String,Int}()
+#     node_count = 0
+    
+#     function get_index!(id::String)
+#         if !haskey(node_map, id)
+#             node_count += 1
+#             node_map[id] = node_count
+#         end
+#         node_map[id]
+#     end
+
+#     # Pre-map x/y inputs (0-44 for x00-x44 and y00-y44)
+#     for i in 0:44
+#         get_index!("x$(lpad(i, 2, '0'))")
+#         get_index!("y$(lpad(i, 2, '0'))")
+#     end
+
+#     # Parse gates and build dependency graph
+#     gates = Gate[]
+#     in_degree = Dict{Int,Int}()
+#     adjacency = Dict{Int,Vector{Int}}()
+    
+#     for line in split(rules_section, '\n')
+#         parts = split(line, " -> ")
+#         op_inputs = split(parts[1])
+#         out = get_index!(parts[2])
+        
+#         op = Symbol(op_inputs[1])
+#         in1 = get_index!(op_inputs[2])
+#         in2 = get_index!(op_inputs[3])
+
+#         push!(gates, Gate(op, in1, in2, out))
+        
+#         # Build dependency graph for topological sort
+#         for input in [in1, in2]
+#             push!(get!(adjacency, input, Int[]), out)
+#             in_degree[out] = get(in_degree, out, 0) + 1
+#         end
+#     end
+
+#     # Topological sort using Kahn's algorithm
+#     queue = [i for i in 1:node_count if get(in_degree, i, 0) == 0]
+#     order = Int[]
+    
+#     while !isempty(queue)
+#         node = popfirst!(queue)
+#         push!(order, node)
+#         for neighbor in get(adjacency, node, [])
+#             in_degree[neighbor] -= 1
+#             in_degree[neighbor] == 0 && push!(queue, neighbor)
+#         end
+#     end
+
+#     # Filter and order gates based on topological sort
+#     ordered_gates = [gate for gate in gates if gate.out in order]
+    
+#     return x, y, ordered_gates, node_map
+# end
+
+# function compute_output(x::Int, y::Int, gates::Vector{Gate}, node_map::Dict{String,Int})
+#     max_node = maximum(values(node_map))
+#     state = zeros(Bool, max_node)
+    
+#     # Initialize x/y inputs
+#     for i in 0:44
+#         state[node_map["x$(lpad(i, 2, '0'))"]] = (x >> i) & 1
+#         state[node_map["y$(lpad(i, 2, '0'))"]] = (y >> i) & 1
+#     end
+
+#     # Process gates in topological order
+#     for gate in gates
+#         a = state[gate.in1]
+#         b = state[gate.in2]
+#         state[gate.out] = if gate.op == :AND
+#             a & b
+#         elseif gate.op == :OR
+#             a | b
+#         else # XOR
+#             a ⊻ b
+#         end
+#     end
+
+#     # Collect z outputs
+#     result = 0
+#     for i in 0:44
+#         z_idx = node_map["z$(lpad(i, 2, '0'))"]
+#         result |= state[z_idx] << i
+#     end
+#     result
+# end
+
+# function find_sequences(arr::Vector{Int})
+#     isempty(arr) && return Vector{Int}[]
+#     sort!(arr)
+#     sequences = Vector{Int}[]
+#     current = [arr[1]]
+    
+#     for val in arr[2:end]
+#         val == current[end] + 1 ? push!(current, val) : begin
+#             push!(sequences, current)
+#             current = [val]
+#         end
+#     end
+#     push!(sequences, current)
+#     return sequences
+# end
+
+# function check_adders(x::Int, y::Int, gates::Vector{Gate}, node_map::Dict{String,Int}, indices::Vector{Int})
+#     expected = x + y
+#     result = compute_output(x, y, gates, node_map)
+#     (result & ((1 << (maximum(indices)+1)) - 1)) == (expected & ((1 << (maximum(indices)+1)) - 1))
+# end
+
+# function needed_gates(gates::Vector{Gate}, node_map::Dict{String,Int}, out_indices::Vector{Int})
+#     z_ids = [node_map["z$(lpad(i, 2, '0'))"] for i in out_indices]
+#     required = Set{Int}(z_ids)
+#     queue = copy(z_ids)
+    
+#     while !isempty(queue)
+#         out = pop!(queue)
+#         for gate in gates
+#             if gate.out == out
+#                 push!(required, gate.in1, gate.in2)
+#                 push!(queue, gate.in1, gate.in2)
+#             end
+#         end
+#     end
+#     return required
+# end
+
+# function swap_gates!(gates::Vector{Gate}, i::Int, j::Int)
+#     gates[i], gates[j] = gates[j], gates[i]
+# end
+
+# function day24(input::String = readInput(joinpath(@__DIR__, "..", "data", "day24.txt")))
+#     x, y, gates, node_map = parse_input(input)
+#     p1 = compute_output(x, y, gates, node_map)
+    
+#     # Part 2: Find and fix swapped gates
+#     test_cases = [(0b1100, 0b0110), (0b1010, 0b0101), (0b1111, 0b0000)]  # Example test cases
+#     suspicious = findall(g -> g.op != :XOR && node_map["z45"] ∉ [g.in1, g.in2], gates)
+#     swapped = String[]
+    
+#     for seq in find_sequences([i for i in 0:44 if !check_adders(0, 0, gates, node_map, [i])])
+#         needed = needed_gates(gates, node_map, seq)
+#         candidates = intersect(suspicious, needed)
+        
+#         for (i, j) in Iterators.product(candidates, candidates)
+#             i == j && continue
+#             swap_gates!(gates, i, j)
+            
+#             valid = all(tc -> check_adders(tc[1], tc[2], gates, node_map, seq), test_cases)
+#             if valid
+#                 push!(swapped, "z$(lpad(gates[i].out, 2, '0'))")
+#                 push!(swapped, "z$(lpad(gates[j].out, 2, '0'))")
+#                 break
+#             else
+#                 swap_gates!(gates, i, j)  # Revert if not valid
+#             end
+#         end
+#     end
+    
+#     return [p1, join(sort!(swapped), ",")]
+# end
+
+# end # module

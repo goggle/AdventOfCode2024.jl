@@ -17,7 +17,7 @@ function solve(data, runtime)
     for value ∈ data
         stones[runtime][value] = 1
     end
-    for rt ∈ runtime:-1:1
+    @inbounds for rt ∈ runtime:-1:1
         for stone ∈ keys(stones[rt])
             if haskey(lookup, stone)
                 l, r = lookup[stone]

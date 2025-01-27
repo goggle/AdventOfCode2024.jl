@@ -1,59 +1,65 @@
 module Day22
 
 using AdventOfCode2024
-using DataStructures
 
 function day22(input::String = readInput(joinpath(@__DIR__, "..", "data", "day22.txt")))
     secrets = parse.(Int, split(rstrip(input), '\n'))
     p1 = 0
 
-    nbananas = Dict{Int,Int}()
-    for i1 ∈ 0:18
-        for i2 ∈ 0:18
-            for i3 ∈ 0:18
-                for i4 ∈ 0:18
-                    nbananas[(i1<<15, i2<<10, i3<<5, i4) |> sum] = 0
-                end
-            end
-        end
-    end
+    # Precompute the size of the array based on 19^4 possible combinations (0-18 for each of 4 components)
+    nbananas_size = 19^4
+    nbananas = zeros(Int, nbananas_size)
+    seen_bits = falses(nbananas_size)
 
-    for secret ∈ secrets
-        seen = Set{Int}()
-        cb = CircularBuffer{Int8}(4)
+    for secret in secrets
         nsecret = secret
         price = nsecret % 10
-        for _ ∈ 1:3
+        cb = (Int8(0), Int8(0), Int8(0), Int8(0))
+        for _ in 1:3
             nsecret = next_secret_number(nsecret)
             nprice = nsecret % 10
-            push!(cb, nprice - price)
+            diff = Int8(nprice - price)
+            cb = (cb[2], cb[3], cb[4], diff)
             price = nprice
         end
-        for _ ∈ 4:2000
+
+        for _ in 4:2000
             nsecret = next_secret_number(nsecret)
             nprice = nsecret % 10
-            push!(cb, nprice - price)
+            diff = Int8(nprice - price)
+            cb = (cb[2], cb[3], cb[4], diff)
             price = nprice
 
-            diffseq = ((cb[1] + 9) << 15, (cb[2] + 9) << 10, (cb[3] + 9) << 5, cb[4] + 9) |> sum
-            if diffseq ∉ seen
-                push!(seen, diffseq)
-                nbananas[diffseq] += price
+            d1 = cb[1] + 9
+            d2 = cb[2] + 9
+            d3 = cb[3] + 9
+            d4 = cb[4] + 9
+
+            key = (d1 % Int) << 15 | (d2 % Int) << 10 | (d3 % Int) << 5 | (d4 % Int)
+            i1 = (key >> 15) & 0x1F
+            i2 = (key >> 10) & 0x1F
+            i3 = (key >> 5) & 0x1F
+            i4 = key & 0x1F
+            index = i1 * 19^3 + i2 * 19^2 + i3 * 19 + i4 + 1  # +1 for 1-based indexing
+
+            if !seen_bits[index]
+                seen_bits[index] = true
+                nbananas[index] += price
             end
         end
+
+        fill!(seen_bits, false)
         p1 += nsecret
     end
 
-    return [p1, maximum(values(nbananas))]
+    return [p1, maximum(nbananas)]
 end
 
-function next_secret_number(secret::Int)
-    step1 = mix(secret << 6, secret) |> prune
-    step2 = mix(step1 >> 5, step1) |> prune
-    return mix(step2 << 11, step2) |> prune
+@inline function next_secret_number(secret::Int)
+    # Use bitmasking instead of modulo for faster operations
+    step1 = xor(secret << 6, secret) & 0x00FFFFFF
+    step2 = xor(step1 >> 5, step1) & 0x00FFFFFF
+    return xor(step2 << 11, step2) & 0x00FFFFFF
 end
-
-mix(number::Int, secret::Int) = xor(number, secret)
-prune(secret::Int) = secret % 16777216
 
 end # module

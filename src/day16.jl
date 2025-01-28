@@ -15,7 +15,15 @@ function day16(input::String = readInput(joinpath(@__DIR__, "..", "data", "day16
     endpos = findfirst(==('E'), data)
     p1 = minimum(dist[endpos[1], endpos[2], dir] for dir in 1:4)
 
-    visited = bfs_trace(prev, endpos, nrows, ncols)
+    # Collect end positions with minimal distance
+    endpositions = Tuple{Int,Int,Int}[]
+    for dir in 1:4
+        if dist[endpos[1], endpos[2], dir] == p1
+            push!(endpositions, (endpos[1], endpos[2], dir))
+        end
+    end
+
+    visited = bfs_trace(prev, endpositions, nrows, ncols)
     return [p1, sum(visited)]
 end
 
@@ -61,13 +69,13 @@ function dijkstra(passable::BitMatrix, startpos::CartesianIndex{2}, nrows::Int, 
     return dist, prev
 end
 
-function bfs_trace(prev::Array{Vector{Tuple{Int,Int,Int}},3}, endpos::CartesianIndex{2}, nrows::Int, ncols::Int)
+function bfs_trace(prev::Array{Vector{Tuple{Int,Int,Int}},3}, endpositions::Vector{Tuple{Int,Int,Int}}, nrows::Int, ncols::Int)
     visited = falses(nrows, ncols)
     queue = Deque{Tuple{Int,Int,Int}}()
     enqueued = falses(nrows, ncols, 4)
 
-    for dir in 1:4
-        pos = (endpos[1], endpos[2], dir)
+    # Initialize only with minimal distance end positions
+    for pos in endpositions
         if !isempty(prev[pos...])
             push!(queue, pos)
             enqueued[pos...] = true

@@ -51,7 +51,7 @@ Platform Info:
 
 ## Installation and Usage
 
-Make sure you have [Julia 1.8 or newer](https://julialang.org/downloads/)
+Make sure you have [Julia 1.9 or newer](https://julialang.org/downloads/)
 installed on your system.
 
 

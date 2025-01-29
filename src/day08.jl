@@ -1,45 +1,68 @@
 module Day08
 
 using AdventOfCode2024
-using IterTools
-
 
 function day08(input::String = readInput(joinpath(@__DIR__, "..", "data", "day08.txt")))
-    data = map(x -> x[1], reduce(vcat, permutedims.(map(x -> split(x, ""), split(input)))))
+    data = stack(split(rstrip(input), '\n'))
     solve(data)
 end
 
 function solve(data)
-    antinodes_p1 = Set{CartesianIndex{2}}()
-    antinodes_p2 = Set{CartesianIndex{2}}()
-    frequencies = filter(x -> x != '.', unique(data))
-    for freq ∈ frequencies
-        positions = findall(x -> x == freq, data)
-        for (x, y) ∈ subsets(positions, 2)
-            # part 1:
-            antis = (2 * x - y, 2 * y - x)
-            for anti ∈ antis
-                if checkbounds(Bool, data, anti)
-                    push!(antinodes_p1, anti)
+    rows, cols = size(data)
+    antinodes_p1 = falses(rows, cols)
+    antinodes_p2 = falses(rows, cols)
+    frequencies = filter!(x -> x ≠ '.', unique(data))
+    
+    for freq in frequencies
+        positions = findall(==(freq), data)
+        n = length(positions)
+        n < 2 && continue
+        pos_tuples = [Tuple(p) for p in positions]
+        
+        @inbounds for i in 1:n-1
+            x = pos_tuples[i]
+            for j in i+1:n
+                y = pos_tuples[j]
+                anti1 = (2x[1] - y[1], 2x[2] - y[2])
+                if 1 <= anti1[1] <= rows && 1 <= anti1[2] <= cols
+                    antinodes_p1[anti1...] = true
+                end                
+                anti2 = (2y[1] - x[1], 2y[2] - x[2])
+                if 1 <= anti2[1] <= rows && 1 <= anti2[2] <= cols
+                    antinodes_p1[anti2...] = true
                 end
             end
-
-            # part 2:
-            push!(antinodes_p2, x)
-            dir = y - x
-            next = x + dir
-            while checkbounds(Bool, data, next)
-                push!(antinodes_p2, next)
-                next += dir
-            end
-            next = x - dir
-            while checkbounds(Bool, data, next)
-                push!(antinodes_p2, next)
-                next -= dir
+        end
+        
+        @inbounds for i in 1:n-1
+            x = pos_tuples[i]
+            for j in i+1:n
+                y = pos_tuples[j]
+                dx = y[1] - x[1]
+                dy = y[2] - x[2]
+                
+                antinodes_p2[x...] = true
+                
+                i_pos, j_pos = x
+                while true
+                    i_pos += dx
+                    j_pos += dy
+                    (i_pos < 1 || i_pos > rows || j_pos < 1 || j_pos > cols) && break
+                    antinodes_p2[i_pos, j_pos] = true
+                end
+                
+                i_neg, j_neg = x
+                while true
+                    i_neg -= dx
+                    j_neg -= dy
+                    (i_neg < 1 || i_neg > rows || j_neg < 1 || j_neg > cols) && break
+                    antinodes_p2[i_neg, j_neg] = true
+                end
             end
         end
     end
-    return [length(antinodes_p1), length(antinodes_p2)]
+    
+    return [sum(antinodes_p1), sum(antinodes_p2)]
 end
 
 end # module

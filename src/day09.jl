@@ -38,17 +38,13 @@ function part1!(blocks::Vector{MVector{4,Int}})
         freeindex = blocks[i][1] + blocks[i][3]
         free = blocks[i][2] - blocks[i][3]
         maxtransfer = blocks[j][3]
-        transfer = free >= maxtransfer ? maxtransfer : free
-        data[freeindex:freeindex+transfer-1] .= blocks[j][4]
-        data[blocks[j][1]+blocks[j][3]-transfer:blocks[j][1]+blocks[j][3]-1] .= -1
+        transfer = min(free, maxtransfer)
+        @views data[freeindex:freeindex+transfer-1] .= blocks[j][4]
+        @views data[blocks[j][1]+blocks[j][3]-transfer:blocks[j][1]+blocks[j][3]-1] .= -1
         blocks[i][3] += transfer
         blocks[j][3] -= transfer
-        if blocks[i][2] == blocks[i][3]
-            i += 1
-        end
-        if blocks[j][3] == 0
-            j -= 1
-        end
+        i += (blocks[i][2] == blocks[i][3])
+        j -= (blocks[j][3] == 0)
     end
     return data |> checksum
 end
@@ -61,8 +57,8 @@ function part2!(blocks::Vector{MVector{4,Int}})
         for i ∈ 1:j-1
             free = blocks[i][2] - blocks[i][3]
             if free >= transfer
-                data[blocks[i][1]+blocks[i][3]:blocks[i][1]+blocks[i][3]+transfer-1] .= blocks[j][4]
-                data[blocks[j][1]:blocks[j][1]+transfer-1] .= -1
+                @views data[blocks[i][1]+blocks[i][3]:blocks[i][1]+blocks[i][3]+transfer-1] .= blocks[j][4]
+                @views data[blocks[j][1]:blocks[j][1]+transfer-1] .= -1
                 blocks[i][3] += transfer
                 blocks[j][3] -= transfer
                 break
@@ -75,20 +71,17 @@ end
 function generate_disk(blocks::Vector{MVector{4,Int}})
     data = -1 * ones(Int, blocks[end][1] + blocks[end][2] - 1)
     for block ∈ blocks
-        @inbounds data[block[1]:block[1]+block[3]-1] .= block[4]
+        @views data[block[1]:block[1]+block[3]-1] .= block[4]
     end
     return data
 end
 
 function checksum(data::Vector{Int})
-    s, i = 0, 1
-    @inbounds while i < length(data)
-        if data[i] == -1
-            i += 1
-            continue
+    s = 0
+    @inbounds for i ∈ eachindex(data)
+        if data[i] != -1
+            s += data[i] * (i - 1)
         end
-        s += data[i] * (i - 1)
-        i += 1
     end
     return s
 end

@@ -3,21 +3,18 @@ module Day24
 using AdventOfCode2024
 
 function day24(input::String = readInput(joinpath(@__DIR__, "..", "data", "day24.txt")))
-    x, y, rules = parse_input(input)
-    p1, ruleorder = run(x, y, rules, nothing)
+    x, y, rules, var_ids, x_bits, y_bits, z_outputs, ruleorder = parse_input_optimized(input)
+    p1 = run_optimized(x, y, rules, var_ids, x_bits, y_bits, z_outputs, ruleorder)
 
     swapped_outputs = String[]
     swapped_inds = Int[]
-    wrong_adders = [i for i ∈ 0:44 if !check_adders_at_indices(rules, [i]; ruleorder)[1]]
+    wrong_adders = [i for i ∈ 0:44 if !check_adders_dynamic(rules, var_ids, x_bits, y_bits, z_outputs, [i])[1]]
 
-    # rules of the form "xyz OR/ADD abc -> zdf" are probably wrong and need to be swapped
-    suspicious_rules = findall(x -> startswith(x[4], "z") && x[4] != "z45" && x[1] != "XOR", rules)
+    suspicious_rules = findall(x -> startswith(rules[x][4], "z") && rules[x][4] != "z45" && rules[x][1] != "XOR", 1:length(rules))
 
     sequences = find_sequences(wrong_adders)
     for sequence ∈ sequences
-
-        # put the suspicious rules to the beginning of the needed rules§
-        nrules = needed_rules(rules, sequence) |> collect
+        nrules = needed_rules_optimized(rules, sequence) |> collect
         for susrule ∈ suspicious_rules
             if susrule ∈ nrules && susrule ∉ swapped_inds
                 filter!(x -> x != susrule, nrules)
@@ -30,10 +27,10 @@ function day24(input::String = readInput(joinpath(@__DIR__, "..", "data", "day24
             for ri ∈ collection
                 for rj ∈ nrules
                     ri == rj && continue
-                    first, second = swap_outputs!(rules, ri , rj)
-                    corrects_critical_gates, ruleorder = check_adders_at_indices(rules, sequence)
-                    if corrects_critical_gates
-                        success, _ = check_adders_at_indices(rules, setdiff(0:44, wrong_adders); ruleorder)
+                    first, second = swap_outputs!(rules, ri, rj)
+                    corrects_critical, _ = check_adders_dynamic(rules, var_ids, x_bits, y_bits, z_outputs, sequence)
+                    if corrects_critical
+                        success, _ = check_adders_dynamic(rules, var_ids, x_bits, y_bits, z_outputs, setdiff(0:44, wrong_adders))
                         if success
                             push!(swapped_outputs, (first, second)...)
                             push!(swapped_inds, (ri, rj)...)
@@ -57,194 +54,225 @@ _to_id(number::Int, pre::String) = pre * lpad(number, 2, '0')
 _to_number(id::String) = isdigit(id[end]) ? parse(Int, id[2:end]) : -1
 
 function find_sequences(arr::Vector{Int})
+    isempty(arr) && return Vector{Int}[]
     sequences = Vector{Int}[]
-    if isempty(arr)
-        return sequences
-    end
     current_seq = [arr[1]]
     for i ∈ 2:length(arr)
-        if arr[i] == arr[i-1] + 1
-            push!(current_seq, arr[i])
-        else
-            push!(sequences, copy(current_seq))
-            current_seq = [arr[i]]
-        end
+        arr[i] == arr[i-1] + 1 ? push!(current_seq, arr[i]) : (push!(sequences, current_seq); current_seq = [arr[i]])
     end
     push!(sequences, current_seq)
-    return sequences
+    sequences
 end
 
 function swap_outputs!(rules::Vector{NTuple{4, String}}, i::Int, j::Int)
-    first = rules[i][end]
-    second = rules[j][end]
-    rules[i] = (rules[i][1], rules[i][2], rules[i][3], second)
-    rules[j] = (rules[j][1], rules[j][2], rules[j][3], first)
-    return first, second
+    rules[i], rules[j] = ( (rules[i][1], rules[i][2], rules[i][3], rules[j][4]), (rules[j][1], rules[j][2], rules[j][3], rules[i][4]) )
+    return (rules[i][4], rules[j][4])
 end
 
-function parse_input(input::AbstractString)
+function parse_input_optimized(input::AbstractString)
     inits, rules = split(input, "\n\n")
-    reg1 = r"([xy])(\d{2}):\s(\d)"
+    var_ids = Dict{String, Int}()
+    current_id = 1
+
     x, y = 0, 0
+    reg1 = r"([xy])(\d{2}):\s(\d)"
+    x_bits = Dict{Int, Int}()
+    y_bits = Dict{Int, Int}()
     for line ∈ split(rstrip(inits), "\n")
         m = match(reg1, line)
+        var = m.captures[1] * m.captures[2]
+        get!(var_ids, var) do
+            current_id += 1
+        end
         index = parse(Int, m.captures[2])
         bit = parse(Int, m.captures[3])
+        id = var_ids[var]
         if m.captures[1] == "x"
+            x_bits[id] = index
             x += bit << index
         else
+            y_bits[id] = index
             y += bit << index
         end
     end
+
     reg2 = r"([a-z0-9]+)\s+(AND|OR|XOR)\s+([a-z0-9]+)\s+->\s+([a-z0-9]+)"
-    rule = Tuple{String,String,String,String}[]
+    parsed_rules = NTuple{4, String}[]
+    output_vars = String[]
     for line ∈ split(rstrip(rules), "\n")
         m = match(reg2, line)
-        push!(rule, (string(m.captures[2]), string(m.captures[1]), string(m.captures[3]), string(m.captures[4])))
-    end
-    return x, y, rule
-end
-
-function run(x::Int, y::Int, rules::Vector{NTuple{4, String}}, _::Nothing)
-    state = Dict{String,Bool}()
-    unused_rules = Set(1:length(rules))
-    prev_length = length(unused_rules) + 1
-    reg = r"([xy])(\d{2})"
-
-    ruleorder = zeros(Int, length(rules))
-    i = 1
-    while !isempty(unused_rules) && length(unused_rules) < prev_length
-        prev_length = length(unused_rules)
-        for ri ∈ copy(unused_rules)
-            rule = rules[ri]
-            values = [false, false]
-            found = false
-            for j ∈ 2:3
-                if haskey(state, rule[j])
-                    found = true
-                    values[j-1] = state[rule[j]]
-                else
-                    m = match(reg, rule[j])
-                    if m !== nothing
-                        found = true
-                        index = parse(Int, m.captures[2])
-                        if m.captures[1] == "x"
-                            values[j-1] = (x >> index) % 2
-                        else
-                            values[j-1] = (y >> index) % 2
-                        end
-                    else
-                        found = false
-                        break
-                    end
-                end
+        op, left, right, output = m.captures[2], m.captures[1], m.captures[3], m.captures[4]
+        for var in [left, right, output]
+            get!(var_ids, var) do
+                current_id += 1
             end
-            if found
-                delete!(unused_rules, ri)
-                ruleorder[i] = ri
-                i += 1
-                if rule[1] == "AND"
-                    state[rule[4]] = values[1] & values[2]
-                elseif rule[1] == "OR"
-                    state[rule[4]] = values[1] | values[2]
-                elseif rule[1] == "XOR"
-                    state[rule[4]] = values[1] ⊻ values[2]
-                end
+        end
+        push!(parsed_rules, (op, left, right, output))
+        push!(output_vars, output)
+    end
+
+    adjacency = Dict{String, Vector{String}}()
+    in_degree = Dict{String, Int}()
+    for var ∈ output_vars
+        adjacency[var] = []
+        in_degree[var] = 0
+    end
+
+    for (_, left, right, output) ∈ parsed_rules
+        for input_var ∈ [left, right]
+            if input_var ∈ keys(in_degree)
+                push!(adjacency[input_var], output)
+                in_degree[output] += 1
             end
         end
     end
 
-    !isempty(unused_rules) && return -1, ruleorder
+    queue = [var for var ∈ output_vars if in_degree[var] == 0]
+    top_order = String[]
+    while !isempty(queue)
+        var = popfirst!(queue)
+        push!(top_order, var)
+        for neighbor ∈ adjacency[var]
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0
+                push!(queue, neighbor)
+            end
+        end
+    end
 
-    result = 0
+    output_to_rule = Dict(var => i for (i, (_, _, _, var)) ∈ enumerate(parsed_rules))
+    ruleorder = [output_to_rule[var] for var ∈ top_order]
+
+    z_outputs = String[]
     i = 0
     while true
-        id = _to_id(i, "z")
-        !haskey(state, id) && break
-        result += state[id] << i
+        z_id = _to_id(i, "z")
+        haskey(var_ids, z_id) ? push!(z_outputs, z_id) : break
         i += 1
     end
-    return result, ruleorder
+
+    return x, y, parsed_rules, var_ids, x_bits, y_bits, z_outputs, ruleorder
 end
 
-
-function run(x::Int, y::Int, rules::Vector{NTuple{4, String}}, ruleorder::Vector{Int})
-    state = Dict{String,Bool}()
-    reg = r"([xy])(\d{2})"
-
-    any(ruleorder .== 0) && return -1, ruleorder
+function run_optimized(x::Int, y::Int, rules::Vector{NTuple{4, String}}, var_ids::Dict{String, Int}, x_bits::Dict{Int, Int}, y_bits::Dict{Int, Int}, z_outputs::Vector{String}, ruleorder::Vector{Int})
+    max_id = maximum(values(var_ids))
+    state = falses(max_id)
+    for (id, idx) ∈ x_bits
+        state[id] = (x >> idx) & 1 == 1
+    end
+    for (id, idx) ∈ y_bits
+        state[id] = (y >> idx) & 1 == 1
+    end
 
     for ri ∈ ruleorder
-        rule = rules[ri]
-        values = [false, false]
-        for j ∈ 2:3
-            m = match(reg, rule[j])
-            if m !== nothing
-                index = parse(Int, m.captures[2])
-                if m.captures[1] == "x"
-                    values[j-1] = (x >> index) % 2
-                else
-                    values[j-1] = (y >> index) % 2
-                end
-            else
-                values[j-1] = state[rule[j]]
-            end
-        end
-        if rule[1] == "AND"
-            state[rule[4]] = values[1] & values[2]
-        elseif rule[1] == "OR"
-            state[rule[4]] = values[1] | values[2]
-        elseif rule[1] == "XOR"
-            state[rule[4]] = values[1] ⊻ values[2]
+        op, left, right, output = rules[ri]
+        lid, rid, oid = var_ids[left], var_ids[right], var_ids[output]
+        lval = state[lid]
+        rval = state[rid]
+        if op == "AND"
+            state[oid] = lval & rval
+        elseif op == "OR"
+            state[oid] = lval | rval
+        elseif op == "XOR"
+            state[oid] = lval ⊻ rval
         end
     end
 
     result = 0
-    i = 0
-    while true
-        id = _to_id(i, "z")
-        !haskey(state, id) && break
-        result += state[id] << i
-        i += 1
+    for (i, z) ∈ enumerate(z_outputs)
+        result += state[var_ids[z]] << (i - 1)
     end
-    return result, ruleorder
+    return result
 end
 
-function needed_rules(rules::Vector{NTuple{4, String}}, outinds::Vector{Int})
-    ruleinds = Set{Int}()
-    reg = r"[xy]\d{2}"
+function needed_rules_optimized(rules::Vector{NTuple{4, String}}, outinds::Vector{Int})
+    needed = Set{Int}()
     queue = [_to_id(ind, "z") for ind ∈ outinds]
+    outputs = Set([rule[4] for rule ∈ rules])
     while !isempty(queue)
         out = popfirst!(queue)
-        ruleind = findall(x -> x[4] == out, rules)[1]
-        push!(ruleinds, ruleind)
-        for i ∈ 2:3
-            m = match(reg, rules[ruleind][i])
-            if m === nothing
-                push!(queue, rules[ruleind][i])
+        for (i, rule) ∈ enumerate(rules)
+            if rule[4] == out
+                push!(needed, i)
+                for j ∈ 2:3
+                    input_var = rule[j]
+                    if input_var ∈ outputs
+                        push!(queue, input_var)
+                    end
+                end
+                break
             end
         end
     end
-    return ruleinds
+    return needed
 end
 
-function check_adders_at_indices(rules::Vector{NTuple{4, String}}, indices::Vector{Int}; ruleorder::Union{Vector{Int},Nothing} = nothing)
+function check_adders_dynamic(rules, var_ids, x_bits, y_bits, z_outputs, indices)
     xi    = (1, 1, 0, 1, 1)
     yi    = (0, 1, 0, 0, 1)
     cprev = (0, 0, 1, 1, 1)
     for index ∈ indices
         iter = index == 0 ? (1:2) : (1:5)
         for i ∈ iter
-            x = (xi[i] << index) + (cprev[i] << (index - 1))
-            y = (yi[i] << index) + (cprev[i] << (index - 1))
-            result, ruleorder = run(x, y, rules, ruleorder)
-            result == -1 && return false, ruleorder
-            if result != x + y
-                return false, ruleorder
+            x_val = (xi[i] << index) + (cprev[i] << (index - 1))
+            y_val = (yi[i] << index) + (cprev[i] << (index - 1))
+            result = run_dynamic(x_val, y_val, rules, var_ids, x_bits, y_bits, z_outputs)
+            expected = x_val + y_val
+            if result != expected
+                return false, nothing
             end
         end
     end
-    return true, ruleorder
+    return true, nothing
+end
+
+function run_dynamic(x::Int, y::Int, rules::Vector{NTuple{4, String}}, var_ids::Dict{String, Int}, x_bits::Dict{Int, Int}, y_bits::Dict{Int, Int}, z_outputs::Vector{String})
+    max_id = maximum(values(var_ids))
+    state = falses(max_id)
+    computed = falses(max_id)
+
+    for (id, idx) ∈ x_bits
+        state[id] = (x >> idx) & 1 == 1
+        computed[id] = true
+    end
+    for (id, idx) ∈ y_bits
+        state[id] = (y >> idx) & 1 == 1
+        computed[id] = true
+    end
+
+    processed = falses(length(rules))
+    any_changes = true
+    while any_changes
+        any_changes = false
+        for (ri, rule) ∈ enumerate(rules)
+            processed[ri] && continue
+            op, left, right, output = rule
+            lid = var_ids[left]
+            rid = var_ids[right]
+            oid = var_ids[output]
+            if computed[lid] && computed[rid]
+                lval = state[lid]
+                rval = state[rid]
+                if op == "AND"
+                    state[oid] = lval & rval
+                elseif op == "OR"
+                    state[oid] = lval | rval
+                elseif op == "XOR"
+                    state[oid] = lval ⊻ rval
+                end
+                computed[oid] = true
+                processed[ri] = true
+                any_changes = true
+            end
+        end
+    end
+
+    result = 0
+    for (i, z) ∈ enumerate(z_outputs)
+        oid = var_ids[z]
+        computed[oid] && (result += state[oid] << (i - 1))
+    end
+    return result
 end
 
 end # module

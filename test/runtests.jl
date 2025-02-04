@@ -325,7 +325,7 @@ end
 end
 
 @testset "Day 20" begin
-    @testset AdventOfCode2024.Day20.day20() == [1411, 1010263]
+    @test AdventOfCode2024.Day20.day20() == [1411, 1010263]
 end
 
 @testset "Day 21" begin
@@ -334,8 +334,8 @@ end
              "179A\n" *
              "456A\n" *
              "379A\n"
-    @testset AdventOfCode2024.Day21.day21(sample) == [126384, 154115708116294]
-    @testset AdventOfCode2024.Day21.day21() == [163920, 204040805018350]
+    @test AdventOfCode2024.Day21.day21(sample) == [126384, 154115708116294]
+    @test AdventOfCode2024.Day21.day21() == [163920, 204040805018350]
 end
 
 @testset "Day 22" begin

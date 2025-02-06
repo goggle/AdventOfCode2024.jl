@@ -2,6 +2,12 @@ module Day12
 
 using AdventOfCode2024
 
+const NEIGHBORS = (
+    CartesianIndex(1, 0),
+    CartesianIndex(-1, 0),
+    CartesianIndex(0, 1),
+    CartesianIndex(0, -1)
+)
 
 function day12(input::String = readInput(joinpath(@__DIR__, "..", "data", "day12.txt")))
     data = map(x -> x[1], reduce(vcat, permutedims.(map(x -> split(x, ""), split(input)))))
@@ -10,21 +16,22 @@ end
 
 function solve(data)
     p1, p2 = 0, 0
-    visited = zeros(Bool, size(data))
+    visited = falses(size(data))
     
-    for i ∈ eachindex(view(data, 1:size(data, 1), 1:size(data, 2)))
+    for i in CartesianIndices(data)
         visited[i] && continue
         label = data[i]
         area = 0
         ntouches = 0
-        queue = [i]
+        stack = [i]
         sideinds = Set{Tuple{Int,Int,Int}}()
-        while !isempty(queue)
-            ind = popfirst!(queue)
+        while !isempty(stack)
+            ind = pop!(stack)
             visited[ind] && continue
-            area += 1
             visited[ind] = true
-            for (nind, d) ∈ zip(CartesianIndex.(ind.I .+ x for x ∈ ((1, 0), (-1, 0), (0, 1), (0, -1))), (1,2,3,4))
+            area += 1
+            for (offset, d) in zip(NEIGHBORS, 1:4)
+                nind = ind + offset
                 if !checkbounds(Bool, data, nind)
                     push!(sideinds, (nind.I..., d))
                     continue
@@ -32,7 +39,7 @@ function solve(data)
                 if data[nind] == label
                     ntouches += 1
                     if !visited[nind]
-                        push!(queue, nind)
+                        push!(stack, nind)
                     end
                 else
                     push!(sideinds, (nind.I..., d))
@@ -50,13 +57,20 @@ function calculate_sides(sideinds::Set{Tuple{Int,Int,Int}})
     count = 0
     while !isempty(sideinds)
         count += 1
-        queue = Tuple{Int,Int,Int}[first(sideinds)]
-        while !isempty(queue)
-            a = popfirst!(queue)
-            delete!(sideinds, a)
-            for b ∈ sideinds
-                if a[3] == b[3] && sum(abs.(a[1:2] .- b[1:2])) == 1
-                    push!(queue, b)
+        start = pop!(sideinds)
+        stack = [start]
+        while !isempty(stack)
+            a = pop!(stack)
+            adjacents = (
+                (a[1] + 1, a[2], a[3]),
+                (a[1] - 1, a[2], a[3]),
+                (a[1], a[2] + 1, a[3]),
+                (a[1], a[2] - 1, a[3]),
+            )
+            for adj in adjacents
+                if adj in sideinds
+                    push!(stack, adj)
+                    delete!(sideinds, adj)
                 end
             end
         end

@@ -8,7 +8,7 @@ function day24(input::String = readInput(joinpath(@__DIR__, "..", "data", "day24
 
     swapped_outputs = String[]
     swapped_inds = Int[]
-    wrong_adders = [i for i ∈ 0:44 if !check_adders_dynamic(rules, var_ids, x_bits, y_bits, z_outputs, [i])[1]]
+    wrong_adders = [i for i ∈ 0:44 if !check_adders_dynamic(rules, var_ids, x_bits, y_bits, z_outputs, [i], ruleorder)[1]]
 
     suspicious_rules = findall(x -> startswith(rules[x][4], "z") && rules[x][4] != "z45" && rules[x][1] != "XOR", 1:length(rules))
 
@@ -28,9 +28,9 @@ function day24(input::String = readInput(joinpath(@__DIR__, "..", "data", "day24
                 for rj ∈ nrules
                     ri == rj && continue
                     first, second = swap_outputs!(rules, ri, rj)
-                    corrects_critical, _ = check_adders_dynamic(rules, var_ids, x_bits, y_bits, z_outputs, sequence)
+                    corrects_critical, _ = check_adders_dynamic(rules, var_ids, x_bits, y_bits, z_outputs, sequence, ruleorder)
                     if corrects_critical
-                        success, _ = check_adders_dynamic(rules, var_ids, x_bits, y_bits, z_outputs, setdiff(0:44, wrong_adders))
+                        success, _ = check_adders_dynamic(rules, var_ids, x_bits, y_bits, z_outputs, setdiff(0:44, wrong_adders), ruleorder)
                         if success
                             push!(swapped_outputs, (first, second)...)
                             push!(swapped_inds, (ri, rj)...)
@@ -207,7 +207,7 @@ function needed_rules_optimized(rules::Vector{NTuple{4, String}}, outinds::Vecto
     return needed
 end
 
-function check_adders_dynamic(rules, var_ids, x_bits, y_bits, z_outputs, indices)
+function check_adders_dynamic(rules, var_ids, x_bits, y_bits, z_outputs, indices, ruleorder)
     xi    = (1, 1, 0, 1, 1)
     yi    = (0, 1, 0, 0, 1)
     cprev = (0, 0, 1, 1, 1)
@@ -216,7 +216,7 @@ function check_adders_dynamic(rules, var_ids, x_bits, y_bits, z_outputs, indices
         for i ∈ iter
             x_val = (xi[i] << index) + (cprev[i] << (index - 1))
             y_val = (yi[i] << index) + (cprev[i] << (index - 1))
-            result = run_dynamic(x_val, y_val, rules, var_ids, x_bits, y_bits, z_outputs)
+            result = run_optimized(x_val, y_val, rules, var_ids, x_bits, y_bits, z_outputs, ruleorder)
             expected = x_val + y_val
             if result != expected
                 return false, nothing
@@ -224,55 +224,6 @@ function check_adders_dynamic(rules, var_ids, x_bits, y_bits, z_outputs, indices
         end
     end
     return true, nothing
-end
-
-function run_dynamic(x::Int, y::Int, rules::Vector{NTuple{4, String}}, var_ids::Dict{String, Int}, x_bits::Dict{Int, Int}, y_bits::Dict{Int, Int}, z_outputs::Vector{String})
-    max_id = maximum(values(var_ids))
-    state = falses(max_id)
-    computed = falses(max_id)
-
-    for (id, idx) ∈ x_bits
-        state[id] = (x >> idx) & 1 == 1
-        computed[id] = true
-    end
-    for (id, idx) ∈ y_bits
-        state[id] = (y >> idx) & 1 == 1
-        computed[id] = true
-    end
-
-    processed = falses(length(rules))
-    any_changes = true
-    while any_changes
-        any_changes = false
-        for (ri, rule) ∈ enumerate(rules)
-            processed[ri] && continue
-            op, left, right, output = rule
-            lid = var_ids[left]
-            rid = var_ids[right]
-            oid = var_ids[output]
-            if computed[lid] && computed[rid]
-                lval = state[lid]
-                rval = state[rid]
-                if op == "AND"
-                    state[oid] = lval & rval
-                elseif op == "OR"
-                    state[oid] = lval | rval
-                elseif op == "XOR"
-                    state[oid] = lval ⊻ rval
-                end
-                computed[oid] = true
-                processed[ri] = true
-                any_changes = true
-            end
-        end
-    end
-
-    result = 0
-    for (i, z) ∈ enumerate(z_outputs)
-        oid = var_ids[z]
-        computed[oid] && (result += state[oid] << (i - 1))
-    end
-    return result
 end
 
 end # module

@@ -4,55 +4,76 @@ using AdventOfCode2024
 
 function day11(input::String = readInput(joinpath(@__DIR__, "..", "data", "day11.txt")))
     data = parse.(Int, split(rstrip(input)))
-    return [solve(data, 25), solve(data, 75)]
-end
-
-function solve(data, runtime)
+    runtime1 = 25
+    runtime2 = 75
+    
     lookup = Dict{Int,Tuple{Int,Int}}()
     lookup[0] = (1, -1)
-    stones = Dict{Int,Dict{Int,Int}}()
-    for i ∈ 0:runtime
-        stones[i] = Dict{Int,Int}()
+    
+    stones = Vector{Dict{Int,Int}}(undef, runtime2 + 1)
+    for i in 0:runtime2
+        stones[i+1] = Dict{Int,Int}()
     end
-    for value ∈ data
-        stones[runtime][value] = 1
-    end
-    @inbounds for rt ∈ runtime:-1:1
-        for stone ∈ keys(stones[rt])
-            if haskey(lookup, stone)
-                l, r = lookup[stone]
-            else
-                if iseven(length(digits(stone)))
-                    l, r = split_number(stone)
-                else
-                    l, r = stone * 2024, -1
-                end
-                lookup[stone] = (l, r)
-            end
-            amount = stones[rt][stone]
-            if haskey(stones[rt-1], l)
-                stones[rt-1][l] += amount
-            else
-                stones[rt-1][l] = amount
-            end
-            r == -1 && continue
-            if haskey(stones[rt-1], r)
-                stones[rt-1][r] += amount
-            else
-                stones[rt-1][r] = amount
-            end
-        end
-    end
-    return stones[0] |> values |> sum
-
+    
+    result1 = compute_stones!(stones, data, runtime1, lookup)
+    result2 = continue_stones!(stones, runtime1, runtime2, lookup)
+    
+    return [result1, result2]
 end
 
-function split_number(number::Int)
-    digs = digits(number)
-    n = length(digs)
-    l = @view(digs[n÷2+1:end]) .* [10^x for x ∈ 0:n÷2-1] |> sum
-    r = @view(digs[1:n÷2]) .* [10^x for x ∈ 0:n÷2-1] |> sum
-    return l, r
+function compute_stones!(stones, data, runtime, lookup)
+    for value in data
+        stones[runtime+1][value] = get!(stones[runtime+1], value, 0) + 1
+    end
+    
+    @inbounds for rt in runtime:-1:1
+        current = stones[rt+1]
+        next = stones[rt]
+        for stone in keys(current)
+            l, r = get_transformation(stone, lookup)
+            amount = current[stone]
+            next[l] = get!(next, l, 0) + amount
+            r != -1 && (next[r] = get!(next, r, 0) + amount)
+        end
+    end
+    
+    return sum(values(stones[1]))
+end
+
+function continue_stones!(stones, start_runtime, target_runtime, lookup)
+    remaining = target_runtime - start_runtime
+    stones[remaining+1] = copy(stones[1])
+    # Clear intermediate levels
+    for i in 1:remaining
+        empty!(stones[i])
+    end
+    
+    @inbounds for rt in remaining:-1:1
+        current = stones[rt+1]
+        next = stones[rt]
+        for stone in keys(current)
+            l, r = get_transformation(stone, lookup)
+            amount = current[stone]
+            next[l] = get!(next, l, 0) + amount
+            r != -1 && (next[r] = get!(next, r, 0) + amount)
+        end
+    end
+    
+    return sum(values(stones[1]))
+end
+
+@inline function get_transformation(stone, lookup)
+    return get!(lookup, stone) do
+        digs = digits(stone)
+        n = length(digs)
+        if iseven(n)
+            l = sum(@view(digs[n÷2+1:end]) .* [10^x for x ∈ 0:n÷2-1])
+            r = sum(@view(digs[1:n÷2]) .* [10^x for x ∈ 0:n÷2-1])
+            (l, r)
+        else
+            (stone * 2024, -1)
+        end
+    end
 end
 
 end # module
